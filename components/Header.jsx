@@ -10,8 +10,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-20 pt-6">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-orange-600">
-              BookingAdventures<span className="text-orange-500">.</span>
+            <h1 className="text-2xl font-bold text-red-500">
+              BookingAdventures<span className="text-red-500">.</span>
             </h1>
           </div>
 

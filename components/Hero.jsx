@@ -97,13 +97,16 @@ export default function Hero() {
 
               {/* Travel Cards - Overlapping Stacked Layout */}
               <div className="relative h-full flex items-center justify-center">
-                {/* Left Card - Arc de Triomphe (Behind, rotated slightly) */}
-                <Card className="absolute left-8 top-12 group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 bg-white/95 backdrop-blur-sm border-0 shadow-lg overflow-hidden w-44 h-72 rounded-3xl transform -rotate-12 z-0">
+                {/* Left Card - Arc de Triomphe (Behind, z-index 1) */}
+                <Card className="absolute left-8 top-25 group transition-all duration-500 hover:-translate-y-2 bg-white border-0 overflow-hidden w-44 h-72 z-[1]" style={{borderRadius: '20px'}}>
                   <CardContent className="p-0 h-full">
-                    <div className="relative h-full overflow-hidden rounded-3xl">
-                      <div className="absolute inset-0 bg-gradient-to-b from-amber-200 to-orange-300"></div>
-                      <div className="absolute inset-0 bg-black/5"></div>
-                      <div className="absolute bottom-6 left-4 text-white">
+                    <div className="relative h-full overflow-hidden" style={{borderRadius: '20px'}}>
+                     <img 
+                        src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&h=600&fit=crop" 
+                        alt="Rome Colosseum" 
+                        className="w-full h-full object-cover"
+                      />
+                     <div className="absolute bottom-6 left-4 text-white">
                         <h3 className="text-sm font-bold drop-shadow-md">Paris</h3>
                         <p className="text-xs opacity-90 drop-shadow-md">Arc de Triomphe</p>
                       </div>
@@ -116,12 +119,15 @@ export default function Hero() {
                   </CardContent>
                 </Card>
 
-                {/* Center Card - Rome Colosseum (Front and center, largest) */}
-                <Card className="absolute left-1/2 transform -translate-x-1/2 top-4 group hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 bg-white/95 backdrop-blur-sm border-0 shadow-2xl overflow-hidden w-52 h-80 rounded-3xl z-20">
+                {/* Center Card - Rome Colosseum (Front and center, z-index 99, -50px top margin) */}
+                <Card className="absolute left-1/2 transform -translate-x-1/2 group transition-all duration-500 hover:-translate-y-3 bg-white border-0 overflow-hidden w-52 h-80 z-[99]" style={{borderRadius: '20px', marginTop: '-50px'}}>
                   <CardContent className="p-0 h-full">
-                    <div className="relative h-full overflow-hidden rounded-3xl">
-                      <div className="absolute inset-0 bg-gradient-to-b from-sky-200 to-blue-400"></div>
-                      <div className="absolute inset-0 bg-black/5"></div>
+                    <div className="relative h-full overflow-hidden" style={{borderRadius: '20px'}}>
+                      <img 
+                        src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&h=600&fit=crop" 
+                        alt="Rome Colosseum" 
+                        className="w-full h-full object-cover"
+                      />
                       <div className="absolute bottom-6 left-4 text-white">
                         <h3 className="text-lg font-bold drop-shadow-md">Rome</h3>
                         <p className="text-sm opacity-90 drop-shadow-md">Colosseum</p>
@@ -135,12 +141,15 @@ export default function Hero() {
                   </CardContent>
                 </Card>
 
-                {/* Right Card - Eiffel Tower (Behind, rotated slightly) */}
-                <Card className="absolute right-8 top-20 group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 bg-white/95 backdrop-blur-sm border-0 shadow-lg overflow-hidden w-44 h-72 rounded-3xl transform rotate-12 z-10">
+                {/* Right Card - Eiffel Tower (Behind, z-index 1) */}
+                <Card className="absolute right-8 top-25 group transition-all duration-500 hover:-translate-y-2 bg-white border-0 overflow-hidden w-44 h-72 z-[1]" style={{borderRadius: '20px'}}>
                   <CardContent className="p-0 h-full">
-                    <div className="relative h-full overflow-hidden rounded-3xl">
-                      <div className="absolute inset-0 bg-gradient-to-b from-emerald-200 to-teal-400"></div>
-                      <div className="absolute inset-0 bg-black/5"></div>
+                    <div className="relative h-full overflow-hidden" style={{borderRadius: '20px'}}>
+                      <img 
+                        src="https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&h=600&fit=crop" 
+                        alt="Eiffel Tower Paris" 
+                        className="w-full h-full object-cover"
+                      />
                       <div className="absolute bottom-6 left-4 text-white">
                         <h3 className="text-sm font-bold drop-shadow-md">Paris</h3>
                         <p className="text-xs opacity-90 drop-shadow-md">Eiffel Tower</p>
@@ -156,14 +165,14 @@ export default function Hero() {
               </div>
 
               {/* Floating Action Button */}
-              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 cursor-pointer z-20">
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer z-20">
                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
               </div>
 
               {/* Play Button */}
-              <div className="absolute top-4 right-8 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 cursor-pointer animate-pulse">
+              <div className="absolute top-4 right-8 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer animate-pulse">
                 <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M8 5v10l7-5z"/>
                 </svg>
@@ -185,7 +194,7 @@ export default function Hero() {
         </div>
 
         {/* Booking Form Cards */}
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 mt-8">
+        <div className="mx-auto max-w-7xl px-6 py-12n lg:px-8 mt-8">
           <div className="relative">
             {/* Decorative Elements */}
             <div className="absolute -top-8 left-8 w-12 h-12 bg-pink-400 rounded-full opacity-60"></div>
