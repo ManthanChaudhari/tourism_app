@@ -15,7 +15,7 @@ export default function Home() {
       </Suspense>
       <Header />
       <Hero />
-      <Services />
+      {/* <Services /> */}
       <Destinations />
       <Footer />
     </div>

@@ -9,9 +9,9 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 pt-6">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-red-500">
-              BookingAdventures<span className="text-red-500">.</span>
+          <div className="flex flex-shrink-0">
+            <h1 className="text-2xl font-bold text-orange-600">
+              BookingAdventures<span className="text-orange-600">.</span>
             </h1>
           </div>
 
