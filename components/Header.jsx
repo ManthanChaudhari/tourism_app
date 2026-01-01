@@ -1,6 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { Home, Info, MapPin } from "lucide-react";
 
 export default function Header() {
   const router = useRouter();
@@ -21,28 +22,25 @@ export default function Header() {
               <div className="flex items-center space-x-8">
                 <a 
                   href="#" 
-                  className="text-gray-900 font-medium transition-colors duration-200 relative"
+                  className="text-gray-900 font-medium transition-colors duration-200 relative flex items-center gap-2"
                 >
+                  <Home size={18} />
                   Home
                   <div className="absolute -bottom-2 left-0 w-full h-0.5 bg-orange-500 rounded-full"></div>
                 </a>
                 <a 
                   href="#" 
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200"
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 flex items-center gap-2"
                 >
+                  <Info size={18} />
                   About
                 </a>
                 <a 
                   href="#" 
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200"
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 flex items-center gap-2"
                 >
+                  <MapPin size={18} />
                   Destination
-                </a>
-                <a 
-                  href="#" 
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200"
-                >
-                  Tours
                 </a>
               </div>
             </div>

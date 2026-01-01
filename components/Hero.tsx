@@ -194,9 +194,9 @@ export default function Hero() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20">
+      <section className="relative overflow-hidden pt-32 pb-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -240,7 +240,7 @@ export default function Hero() {
               >
                 <Button
                   size="lg"
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-medium"
+                  className="bg-gray-900 hover:bg-gray-800 text-white px-12 py-6 rounded-full font-medium text-lg"
                 >
                   Discover Now
                 </Button>
@@ -259,11 +259,11 @@ export default function Hero() {
                 </svg>
               </div>
 
-              {/* Travel Cards */}
-              <div className="relative h-full flex items-center justify-center">
+              {/* Travel Cards - Shifted right and up */}
+              <div className="relative h-full flex items-center justify-center translate-x-8 -translate-y-4">
                 {/* Left Card */}
                 <motion.div
-                  className="absolute left-8 top-24"
+                  className="absolute left-12 top-16"
                   initial={{ opacity: 0, x: -60, scale: 0.9 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
@@ -307,7 +307,7 @@ export default function Hero() {
 
                 {/* Center Card */}
                 <motion.div
-                  className="absolute left-1/2 -translate-x-1/2 -mt-12"
+                  className="absolute left-1/2 -translate-x-1/2 -mt-20"
                   initial={{ opacity: 0, y: 60, scale: 0.92 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.9, ease: "easeOut", delay: 0.5 }}
@@ -351,7 +351,7 @@ export default function Hero() {
 
                 {/* Right Card */}
                 <motion.div
-                  className="absolute right-8 top-24"
+                  className="absolute right-4 top-16"
                   initial={{ opacity: 0, x: 60, scale: 0.9 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
@@ -397,14 +397,19 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Booking Form Cards */}
-        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 mt-8">
-          <div className="relative">
-            <div className="bg-white/75 backdrop-blur-lg border-0 shadow-xl rounded-3xl overflow-hidden">
+        {/* Search Bar - Positioned at bottom of section */}
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 z-30"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.9 }}
+        >
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="bg-white/75 backdrop-blur-lg border-0 rounded-3xl overflow-hidden">
               <div className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
+                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
                       focusedField === 1 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -413,7 +418,7 @@ export default function Hero() {
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.8 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.0 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -443,7 +448,7 @@ export default function Hero() {
                   </motion.div>
 
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
+                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
                       focusedField === 2 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -452,7 +457,7 @@ export default function Hero() {
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.9 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.1 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -480,7 +485,7 @@ export default function Hero() {
                   </motion.div>
 
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
+                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
                       focusedField === 3 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -489,7 +494,7 @@ export default function Hero() {
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.0 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -524,11 +529,11 @@ export default function Hero() {
                     className="flex justify-center md:justify-end"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.1 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 1.3 }}
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.92 }}
                   >
-                    <Button className="bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-2xl flex items-center justify-center transition-shadow duration-300 hover:shadow-lg">
+                    <Button className="bg-gray-900 hover:bg-gray-800 text-white w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300">
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
@@ -540,11 +545,15 @@ export default function Hero() {
                     </Button>
                   </motion.div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
-                {/* Multi-Step Dialog with Premium Animations */}
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogContent className="sm:max-w-2xl">
-                    <AnimatePresence mode="wait" custom={currentStep}>
+        {/* Multi-Step Dialog with Premium Animations */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <AnimatePresence mode="wait" custom={currentStep}>
                       {currentStep === 1 && (
                         <motion.div
                           key="step-1"
@@ -806,10 +815,6 @@ export default function Hero() {
                     </AnimatePresence>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   )

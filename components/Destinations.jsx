@@ -102,102 +102,70 @@ export default function Destinations() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
-          {destinations.map((destination) => (
-            <Card
-              key={destination.id}
-              className="group cursor-pointer transition-all duration-500 hover:shadow-2xl bg-white border-0 overflow-hidden relative"
-            >
-              <CardContent className="p-0 relative">
-                <div className="relative h-72 overflow-hidden">
-                  <img
-                    src={destination.image || "/placeholder.svg"}
-                    alt={destination.title}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-2"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500"></div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+      {destinations.map((destination) => (
+        <Card key={destination.id} className="group overflow-hidden">
+          <CardContent className="p-0 relative">
+            <div className="relative h-40 overflow-hidden">
+              <img
+                src={destination.image || "/placeholder.svg?height=160&width=320&query=travel destination"}
+                alt={destination.title}
+                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+              />
+            </div>
 
-                  <div className="absolute bottom-6 left-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-2xl shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                    <div className="text-xs font-medium opacity-90">From</div>
-                    <div className="text-2xl font-bold">{destination.price}</div>
-                  </div>
-
-                  <div className="absolute top-6 right-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
+            <div className="p-4 bg-gradient-to-br from-white to-gray-50 group-hover:from-orange-50 group-hover:to-white transition-all duration-500">
+              <div className="flex items-center gap-2 text-gray-600 mb-2">
+                <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-3 h-3 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold truncate">{destination.location}</span>
+              </div>
+              <h3 className="text-sm font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors duration-300 leading-tight line-clamp-2">
+                {destination.title}
+              </h3>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                <div className="flex items-center gap-1 text-gray-700">
+                  <svg
+                    className="w-3 h-3 text-orange-500 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-xs font-semibold">{destination.duration}</span>
+                </div>
+                <button className="flex items-center gap-1 text-orange-600 font-semibold text-xs group-hover:gap-1.5 transition-all duration-300">
+                  <span>Go</span>
+                  <div className="w-5 h-5 bg-orange-600 text-white rounded-full flex items-center justify-center group-hover:bg-orange-700 transition-all duration-300 flex-shrink-0">
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </div>
-                </div>
-
-                <div className="p-7 bg-gradient-to-br from-white to-gray-50 group-hover:from-orange-50 group-hover:to-white transition-all duration-500">
-                  <div className="flex items-center gap-2 text-gray-600 mb-4">
-                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-semibold">{destination.location}</span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
-                    {destination.title}
-                  </h3>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-sm font-semibold">{destination.duration}</span>
-                    </div>
-
-                    <button className="flex items-center gap-2 text-orange-600 font-semibold text-sm group-hover:gap-3 transition-all duration-300">
-                      <span>Explore</span>
-                      <div className="w-9 h-9 bg-orange-600 text-white rounded-full flex items-center justify-center group-hover:bg-orange-700 transition-all duration-300">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 8l4 4m0 0l-4 4m4-4H3"
-                          />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-400/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
 
         {/* View All Button */}
         <div className="text-center">
           <Button
-            className="text-white px-8 py-3 rounded-full font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-            style={{ backgroundColor: "#eb911f", borderRadius: "30px" }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = "#d4820e"
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "#eb911f"
-            }}
+            className="text-white px-8 py-3 rounded-full font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-orange-600 hover:bg-orange-500"
           >
             VIEW ALL DESTINATIONS
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
