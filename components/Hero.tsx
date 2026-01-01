@@ -196,7 +196,7 @@ export default function Hero() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-32">
+      <section className="relative  pt-32 pb-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -405,7 +405,7 @@ export default function Hero() {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.9 }}
         >
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="bg-white/75 backdrop-blur-lg border-0 rounded-3xl overflow-hidden">
+            <div className="bg-white/75 backdrop-blur-lg border-0 overflow-hidden rounded-4xl shadow-md">
               <div className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                   <motion.div
