@@ -17,12 +17,24 @@ export default function Hero() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedDateObj, setSelectedDateObj] = useState<Date | null>(null)
+  const [isSticky, setIsSticky] = useState(false)
 
   useEffect(() => {
     setIsDesktop(window.innerWidth >= 1024)
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const heroHeight = window.innerHeight * 0.8 // Approximate hero section height
+      setIsSticky(scrollY > heroHeight)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const countries = [
@@ -545,6 +557,110 @@ export default function Hero() {
                     </Button>
                   </motion.div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Sticky Search Bar */}
+        <motion.div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-out ${
+            isSticky ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+          }`}
+          initial={false}
+          animate={{
+            opacity: isSticky ? 1 : 0,
+            y: isSticky ? 0 : -16,
+          }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200/50 overflow-hidden rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="px-6 py-3">
+              <div className="flex items-center gap-4">
+                <motion.div
+                  className={`cursor-pointer px-3 py-2 rounded-full transition-all duration-300 ${
+                    focusedField === 1 ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => {
+                    setFocusedField(1)
+                    openDialog(1)
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedLocation || "Location"}
+                    </span>
+                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.div>
+
+                <div className="w-px h-6 bg-gray-200"></div>
+
+                <motion.div
+                  className={`cursor-pointer px-3 py-2 rounded-full transition-all duration-300 ${
+                    focusedField === 2 ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => {
+                    setFocusedField(2)
+                    openDialog(2)
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedDate || "Date"}
+                    </span>
+                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.div>
+
+                <div className="w-px h-6 bg-gray-200"></div>
+
+                <motion.div
+                  className={`cursor-pointer px-3 py-2 rounded-full transition-all duration-300 ${
+                    focusedField === 3 ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => {
+                    setFocusedField(3)
+                    openDialog(3)
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {adults + children > 0
+                        ? `${adults + children} Guest${adults + children > 1 ? "s" : ""}`
+                        : "Guests"}
+                    </span>
+                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="bg-gray-900 hover:bg-gray-800 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </div>

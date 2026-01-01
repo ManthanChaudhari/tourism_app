@@ -11,39 +11,37 @@ export default function Header() {
         <div className="flex items-center justify-between h-20 pt-6">
           {/* Logo */}
           <div className="flex flex-shrink-0">
-            <h1 className="text-2xl font-bold text-orange-600">
+            <h1 className="text-2xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors duration-300">
               BookingAdventures<span className="text-orange-600">.</span>
             </h1>
           </div>
 
-          {/* Navigation Menu - Subtle white background that blends with hero */}
-          <nav className="hidden md:flex items-center">
-            <div className="bg-white/70 backdrop-blur-md rounded-full px-8 py-3 border-0 shadow-none">
-              <div className="flex items-center space-x-8">
-                <a 
-                  href="#" 
-                  className="text-gray-900 font-medium transition-colors duration-200 relative flex items-center gap-2"
-                >
-                  <Home size={18} />
-                  Home
-                  <div className="absolute -bottom-2 left-0 w-full h-0.5 bg-orange-500 rounded-full"></div>
-                </a>
-                <a 
-                  href="#" 
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 flex items-center gap-2"
-                >
-                  <Info size={18} />
-                  About
-                </a>
-                <a 
-                  href="#" 
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 flex items-center gap-2"
-                >
-                  <MapPin size={18} />
-                  Destination
-                </a>
-              </div>
-            </div>
+          {/* Navigation Menu - Clean minimal design */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <a 
+              href="#" 
+              className="text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+            >
+              <Home size={18} />
+              Home
+              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left transition-transform duration-300 ease-out"></div>
+            </a>
+            <a 
+              href="#" 
+              className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+            >
+              <Info size={18} />
+              About
+              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+            </a>
+            <a 
+              href="#" 
+              className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+            >
+              <MapPin size={18} />
+              Destination
+              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+            </a>
           </nav>
 
           {/* Login Button - Rounded button */}
@@ -58,7 +56,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button className="text-gray-600 hover:text-gray-900 focus:outline-none">
+            <button className="text-gray-600 hover:text-gray-900 focus:outline-none transition-colors duration-300 p-2 rounded-lg hover:bg-gray-100/50">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
