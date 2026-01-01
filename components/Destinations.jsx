@@ -89,7 +89,7 @@ export default function Destinations() {
           display: none;
         }
       `}</style>
-      <section className="pt-8 pb-12 bg-white relative overflow-hidden">
+      <section className="pt-4 pb-12 bg-white relative overflow-hidden">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-[0.02]">
           <svg className="w-full h-full" viewBox="0 0 1200 800" fill="none">
