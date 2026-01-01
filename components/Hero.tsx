@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { AnimatedCar } from "./animated-car"
+import { AnimatedRoute } from "./animated-route"
 
 export default function Hero() {
   const [selectedLocation, setSelectedLocation] = useState("")
@@ -206,10 +208,13 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
       {/* Hero Section */}
-      <section className="relative  pt-32 pb-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="relative pt-32 pb-32">
+        <AnimatedRoute startX={-200} startY={200} endX={1000} endY={180} duration={10} className="-z-10" />
+        <AnimatedCar startX={-200} startY={187} endX={1300} endY={184} duration={10} className="-z-10" />
+
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-8">
@@ -250,12 +255,24 @@ export default function Hero() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.7 }}
               >
-                <Button
-                  size="lg"
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-12 py-6 rounded-full font-medium text-lg"
-                >
-                  Discover Now
-                </Button>
+                {/* Discover Now button moved to searchbar */}
+                {/* Discover Now Button - Top Left Corner */}
+                <div className="mb-4">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.8 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      size="sm"
+                      className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-full font-medium text-sm"
+                    >
+                      Discover Now
+                    </Button>
+                  </motion.div>
+                </div>
               </motion.div>
             </div>
 
@@ -275,7 +292,7 @@ export default function Hero() {
               <div className="relative h-full flex items-center justify-center translate-x-8 -translate-y-4">
                 {/* Left Card */}
                 <motion.div
-                  className="absolute left-12 top-16"
+                  className="absolute left-12 top-16 z-20"
                   initial={{ opacity: 0, x: -60, scale: 0.9 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
@@ -319,7 +336,7 @@ export default function Hero() {
 
                 {/* Center Card */}
                 <motion.div
-                  className="absolute left-1/2 -translate-x-1/2 -mt-20"
+                  className="absolute left-1/2 -translate-x-1/2 -mt-20 z-20"
                   initial={{ opacity: 0, y: 60, scale: 0.92 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.9, ease: "easeOut", delay: 0.5 }}
@@ -363,7 +380,7 @@ export default function Hero() {
 
                 {/* Right Card */}
                 <motion.div
-                  className="absolute right-4 top-16"
+                  className="absolute right-4 top-16 z-20"
                   initial={{ opacity: 0, x: 60, scale: 0.9 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
@@ -411,17 +428,17 @@ export default function Hero() {
 
         {/* Search Bar - Positioned at bottom of section */}
         <motion.div
-          className="absolute bottom-0 left-0 right-0 z-30"
+          className="absolute bottom-12 left-0 right-0 z-10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.9 }}
         >
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="bg-white/75 backdrop-blur-lg border-0 overflow-hidden rounded-4xl shadow-md">
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+              <div className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
+                    className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
                       focusedField === 1 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -435,7 +452,7 @@ export default function Hero() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <motion.label
-                      className="text-gray-900 font-semibold text-lg block"
+                      className="text-gray-900 font-semibold text-base block"
                       animate={{
                         color: focusedField === 1 ? "#1f2937" : "#6b7280",
                       }}
@@ -443,11 +460,11 @@ export default function Hero() {
                       Location
                     </motion.label>
                     <div className="flex items-center text-gray-500 group">
-                      <span className="transition-colors duration-300">
+                      <span className="transition-colors duration-300 text-sm">
                         {selectedLocation || "Where are you going?"}
                       </span>
                       <motion.svg
-                        className="w-4 h-4 ml-2"
+                        className="w-3 h-3 ml-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -460,7 +477,7 @@ export default function Hero() {
                   </motion.div>
 
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
+                    className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
                       focusedField === 2 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -474,7 +491,7 @@ export default function Hero() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <motion.label
-                      className="text-gray-900 font-semibold text-lg block"
+                      className="text-gray-900 font-semibold text-base block"
                       animate={{
                         color: focusedField === 2 ? "#1f2937" : "#6b7280",
                       }}
@@ -482,9 +499,11 @@ export default function Hero() {
                       Date
                     </motion.label>
                     <div className="flex items-center text-gray-500 group">
-                      <span className="transition-colors duration-300">{selectedDate || "When will you travel?"}</span>
+                      <span className="transition-colors duration-300 text-sm">
+                        {selectedDate || "When will you travel?"}
+                      </span>
                       <motion.svg
-                        className="w-4 h-4 ml-2"
+                        className="w-3 h-3 ml-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -497,7 +516,7 @@ export default function Hero() {
                   </motion.div>
 
                   <motion.div
-                    className={`space-y-2 cursor-pointer p-4 rounded-lg transition-all duration-300 ${
+                    className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
                       focusedField === 3 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                     }`}
                     onClick={() => {
@@ -511,7 +530,7 @@ export default function Hero() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <motion.label
-                      className="text-gray-900 font-semibold text-lg block"
+                      className="text-gray-900 font-semibold text-base block"
                       animate={{
                         color: focusedField === 3 ? "#1f2937" : "#6b7280",
                       }}
@@ -519,13 +538,13 @@ export default function Hero() {
                       People
                     </motion.label>
                     <div className="flex items-center text-gray-500 group">
-                      <span className="transition-colors duration-300">
+                      <span className="transition-colors duration-300 text-sm">
                         {adults + children > 0
                           ? `${adults} Adult${adults > 1 ? "s" : ""}, ${children} Child${children !== 1 ? "ren" : ""}`
                           : "How many people?"}
                       </span>
                       <motion.svg
-                        className="w-4 h-4 ml-2"
+                        className="w-3 h-3 ml-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -545,8 +564,8 @@ export default function Hero() {
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.92 }}
                   >
-                    <Button className="bg-gray-900 hover:bg-gray-800 text-white w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <Button className="bg-gray-900 hover:bg-gray-800 text-white w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -575,8 +594,8 @@ export default function Hero() {
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           <div className="bg-white/90 backdrop-blur-xl border border-gray-200/50 overflow-hidden rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="px-6 py-3">
-              <div className="flex items-center gap-4">
+            <div className="px-4 py-2">
+              <div className="flex items-center gap-3">
                 <motion.div
                   className={`cursor-pointer px-3 py-2 rounded-full transition-all duration-300 ${
                     focusedField === 1 ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-gray-50"
@@ -589,9 +608,7 @@ export default function Hero() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedLocation || "Location"}
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">{selectedLocation || "Location"}</span>
                     <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -612,9 +629,7 @@ export default function Hero() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedDate || "Date"}
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">{selectedDate || "Date"}</span>
                     <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -646,12 +661,9 @@ export default function Hero() {
                   </div>
                 </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button className="bg-gray-900 hover:bg-gray-800 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button className="bg-gray-900 hover:bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -670,267 +682,262 @@ export default function Hero() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-2xl">
             <AnimatePresence mode="wait" custom={currentStep}>
-                      {currentStep === 1 && (
-                        <motion.div
-                          key="step-1"
-                          variants={stepTransitionVariants}
-                          custom={1}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          className="w-full"
+              {currentStep === 1 && (
+                <motion.div
+                  key="step-1"
+                  variants={stepTransitionVariants}
+                  custom={1}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="w-full"
+                >
+                  <DialogHeader>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <DialogTitle>Select Location</DialogTitle>
+                    </motion.div>
+                  </DialogHeader>
+                  <motion.div
+                    className="grid grid-cols-4 gap-4 py-6"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {countries.map((country) => (
+                      <motion.div
+                        key={country.name}
+                        variants={itemVariants}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                        onClick={() => handleLocationSelect(country.name)}
+                        whileHover={{ scale: 1.06, backgroundColor: "#f3f4f6" }}
+                        whileTap={{ scale: 0.94 }}
+                      >
+                        <span className="text-2xl">{country.flag}</span>
+                        <span className="text-sm font-medium">{country.name}</span>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                  <motion.div
+                    className="flex justify-end gap-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button className="bg-blue-500 hover:bg-blue-600">Select</Button>
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {currentStep === 2 && (
+                <motion.div
+                  key="step-2"
+                  variants={stepTransitionVariants}
+                  custom={2}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="w-full"
+                >
+                  <DialogHeader>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <DialogTitle>Select date</DialogTitle>
+                    </motion.div>
+                  </DialogHeader>
+                  <motion.div
+                    className="py-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <Button variant="ghost" size="sm" onClick={handlePrevMonth}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </Button>
+                      <span className="font-semibold">
+                        {getMonthName(currentMonth)} {currentYear}
+                      </span>
+                      <Button variant="ghost" size="sm" onClick={handleNextMonth}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-2 text-center text-sm mb-4">
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                        <div key={day} className="p-2 text-gray-500 font-medium">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    <motion.div
+                      className="grid grid-cols-7 gap-2 text-center"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      key={`${currentMonth}-${currentYear}`}
+                    >
+                      {generateCalendarDays().map(({ day, key }) => (
+                        <motion.button
+                          key={key}
+                          variants={itemVariants}
+                          className={`p-2 rounded-lg transition-all duration-200 ${
+                            day === null
+                              ? "invisible"
+                              : isDateSelected(day, currentMonth, currentYear)
+                                ? "bg-blue-500 text-white"
+                                : "hover:bg-blue-50 text-gray-900"
+                          }`}
+                          onClick={() => day !== null && handleDateSelect(day)}
+                          disabled={day === null}
+                          whileHover={day !== null ? { scale: 1.1 } : {}}
+                          whileTap={day !== null ? { scale: 0.9 } : {}}
                         >
-                          <DialogHeader>
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <DialogTitle>Select Location</DialogTitle>
-                            </motion.div>
-                          </DialogHeader>
-                          <motion.div
-                            className="grid grid-cols-4 gap-4 py-6"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                          >
-                            {countries.map((country) => (
-                              <motion.div
-                                key={country.name}
-                                variants={itemVariants}
-                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                                onClick={() => handleLocationSelect(country.name)}
-                                whileHover={{ scale: 1.06, backgroundColor: "#f3f4f6" }}
-                                whileTap={{ scale: 0.94 }}
-                              >
-                                <span className="text-2xl">{country.flag}</span>
-                                <span className="text-sm font-medium">{country.name}</span>
-                              </motion.div>
-                            ))}
-                          </motion.div>
-                          <motion.div
-                            className="flex justify-end gap-3"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                          >
-                            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button className="bg-blue-500 hover:bg-blue-600">Select</Button>
-                          </motion.div>
-                        </motion.div>
-                      )}
+                          {day}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                  <motion.div
+                    className="flex justify-end gap-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                      Back
+                    </Button>
+                    <Button className="bg-blue-500 hover:bg-blue-600">Select</Button>
+                  </motion.div>
+                </motion.div>
+              )}
 
-                      {currentStep === 2 && (
-                        <motion.div
-                          key="step-2"
-                          variants={stepTransitionVariants}
-                          custom={2}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          className="w-full"
+              {currentStep === 3 && (
+                <motion.div
+                  key="step-3"
+                  variants={stepTransitionVariants}
+                  custom={3}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="w-full"
+                >
+                  <DialogHeader>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <DialogTitle>Number of passengers</DialogTitle>
+                    </motion.div>
+                  </DialogHeader>
+                  <motion.div
+                    className="py-8 space-y-8"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <motion.div variants={itemVariants} className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xl font-semibold">Adults</div>
+                        <div className="text-gray-500">aged 16+</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <motion.button
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          <DialogHeader>
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <DialogTitle>Select date</DialogTitle>
-                            </motion.div>
-                          </DialogHeader>
-                          <motion.div
-                            className="py-6"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <div className="flex items-center justify-between mb-6">
-                              <Button variant="ghost" size="sm" onClick={handlePrevMonth}>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 19l-7-7 7-7"
-                                  />
-                                </svg>
-                              </Button>
-                              <span className="font-semibold">
-                                {getMonthName(currentMonth)} {currentYear}
-                              </span>
-                              <Button variant="ghost" size="sm" onClick={handleNextMonth}>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </Button>
-                            </div>
-
-                            <div className="grid grid-cols-7 gap-2 text-center text-sm mb-4">
-                              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                                <div key={day} className="p-2 text-gray-500 font-medium">
-                                  {day}
-                                </div>
-                              ))}
-                            </div>
-
-                            <motion.div
-                              className="grid grid-cols-7 gap-2 text-center"
-                              variants={containerVariants}
-                              initial="hidden"
-                              animate="visible"
-                              key={`${currentMonth}-${currentYear}`}
-                            >
-                              {generateCalendarDays().map(({ day, key }) => (
-                                <motion.button
-                                  key={key}
-                                  variants={itemVariants}
-                                  className={`p-2 rounded-lg transition-all duration-200 ${
-                                    day === null
-                                      ? "invisible"
-                                      : isDateSelected(day, currentMonth, currentYear)
-                                        ? "bg-blue-500 text-white"
-                                        : "hover:bg-blue-50 text-gray-900"
-                                  }`}
-                                  onClick={() => day !== null && handleDateSelect(day)}
-                                  disabled={day === null}
-                                  whileHover={day !== null ? { scale: 1.1 } : {}}
-                                  whileTap={day !== null ? { scale: 0.9 } : {}}
-                                >
-                                  {day}
-                                </motion.button>
-                              ))}
-                            </motion.div>
-                          </motion.div>
-                          <motion.div
-                            className="flex justify-end gap-3"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                          >
-                            <Button variant="outline" onClick={() => setCurrentStep(1)}>
-                              Back
-                            </Button>
-                            <Button className="bg-blue-500 hover:bg-blue-600">Select</Button>
-                          </motion.div>
-                        </motion.div>
-                      )}
-
-                      {currentStep === 3 && (
-                        <motion.div
-                          key="step-3"
-                          variants={stepTransitionVariants}
-                          custom={3}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          className="w-full"
+                          −
+                        </motion.button>
+                        <motion.span
+                          className="text-lg font-semibold min-w-8 text-center"
+                          key={adults}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          <DialogHeader>
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <DialogTitle>Number of passengers</DialogTitle>
-                            </motion.div>
-                          </DialogHeader>
-                          <motion.div
-                            className="py-8 space-y-8"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                          >
-                            <motion.div variants={itemVariants} className="flex items-center justify-between">
-                              <div>
-                                <div className="text-xl font-semibold">Adults</div>
-                                <div className="text-gray-500">aged 16+</div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <motion.button
-                                  onClick={() => setAdults(Math.max(1, adults - 1))}
-                                  className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  −
-                                </motion.button>
-                                <motion.span
-                                  className="text-lg font-semibold min-w-8 text-center"
-                                  key={adults}
-                                  initial={{ scale: 0.8, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {adults}
-                                </motion.span>
-                                <motion.button
-                                  onClick={() => setAdults(adults + 1)}
-                                  className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  +
-                                </motion.button>
-                              </div>
-                            </motion.div>
+                          {adults}
+                        </motion.span>
+                        <motion.button
+                          onClick={() => setAdults(adults + 1)}
+                          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          +
+                        </motion.button>
+                      </div>
+                    </motion.div>
 
-                            <motion.div variants={itemVariants} className="flex items-center justify-between">
-                              <div>
-                                <div className="text-xl font-semibold">Children</div>
-                                <div className="text-gray-500">aged 2-15</div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <motion.button
-                                  onClick={() => setChildren(Math.max(0, children - 1))}
-                                  className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  −
-                                </motion.button>
-                                <motion.span
-                                  className="text-lg font-semibold min-w-8 text-center"
-                                  key={children}
-                                  initial={{ scale: 0.8, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {children}
-                                </motion.span>
-                                <motion.button
-                                  onClick={() => setChildren(children + 1)}
-                                  className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  +
-                                </motion.button>
-                              </div>
-                            </motion.div>
-                          </motion.div>
+                    <motion.div variants={itemVariants} className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xl font-semibold">Children</div>
+                        <div className="text-gray-500">aged 2-15</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <motion.button
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          −
+                        </motion.button>
+                        <motion.span
+                          className="text-lg font-semibold min-w-8 text-center"
+                          key={children}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {children}
+                        </motion.span>
+                        <motion.button
+                          onClick={() => setChildren(children + 1)}
+                          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          +
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
 
-                          <motion.div
-                            className="flex justify-end gap-3"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                          >
-                            <Button variant="outline" onClick={() => setCurrentStep(2)}>
-                              Back
-                            </Button>
-                            <Button className="bg-blue-500 hover:bg-blue-600" onClick={handlePassengerDone}>
-                              Done
-                            </Button>
-                          </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </DialogContent>
-                </Dialog>
+                  <motion.div
+                    className="flex justify-end gap-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                      Back
+                    </Button>
+                    <Button className="bg-blue-500 hover:bg-blue-600" onClick={handlePassengerDone}>
+                      Done
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </DialogContent>
+        </Dialog>
       </section>
     </div>
   )
