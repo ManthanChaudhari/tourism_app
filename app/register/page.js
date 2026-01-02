@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authAPI } from "@/lib/auth";
+import { motion } from "framer-motion";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -100,77 +101,222 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gradient-to-br from-orange-400 via-amber-500 to-blue-500">
       {/* Left Side - Travel Adventure Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Background Image Placeholder with Adventure Gradient */}
+        <div className="absolute inset-0 bg-black/30"></div>
+        
+        {/* Decorative Adventure Elements */}
+        <motion.div 
+          className="absolute top-16 right-20 w-40 h-40 bg-white/10 rounded-full blur-2xl"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute bottom-20 left-16 w-28 h-28 bg-orange-300/20 rounded-full blur-xl"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.0, delay: 0.5, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute top-1/3 left-20 w-20 h-20 bg-blue-300/30 rounded-full blur-lg"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute bottom-1/3 right-24 w-16 h-16 bg-amber-300/25 rounded-full blur-md"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.9, ease: "easeOut" }}
+        ></motion.div>
+        
+        {/* Adventure Icons */}
+        <motion.div 
+          className="absolute top-20 left-16 text-white/30"
+          initial={{ opacity: 0, rotate: -45 }}
+          animate={{ opacity: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 1.1, ease: "easeOut" }}
+        >
+          <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+          </svg>
+        </motion.div>
+        <motion.div 
+          className="absolute bottom-32 right-20 text-white/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
+        >
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </motion.div>
         {/* Background Image Placeholder with Adventure Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-500 to-blue-500"></div>
         <div className="absolute inset-0 bg-black/25"></div>
         
         {/* Decorative Adventure Elements */}
-        <div className="absolute top-16 right-20 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 left-16 w-28 h-28 bg-orange-300/20 rounded-full blur-xl"></div>
-        <div className="absolute top-1/3 left-20 w-20 h-20 bg-blue-300/30 rounded-full blur-lg"></div>
-        <div className="absolute bottom-1/3 right-24 w-16 h-16 bg-amber-300/25 rounded-full blur-md"></div>
+        <motion.div 
+          className="absolute top-16 right-20 w-40 h-40 bg-white/10 rounded-full blur-2xl"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute bottom-20 left-16 w-28 h-28 bg-orange-300/20 rounded-full blur-xl"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.0, delay: 0.5, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute top-1/3 left-20 w-20 h-20 bg-blue-300/30 rounded-full blur-lg"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute bottom-1/3 right-24 w-16 h-16 bg-amber-300/25 rounded-full blur-md"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.9, ease: "easeOut" }}
+        ></motion.div>
         
         {/* Adventure Icons */}
-        <div className="absolute top-20 left-16 text-white/30">
+        <motion.div 
+          className="absolute top-20 left-16 text-white/30"
+          initial={{ opacity: 0, rotate: -45 }}
+          animate={{ opacity: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 1.1, ease: "easeOut" }}
+        >
           <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
           </svg>
-        </div>
-        <div className="absolute bottom-32 right-20 text-white/20">
+        </motion.div>
+        <motion.div 
+          className="absolute bottom-32 right-20 text-white/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
+        >
           <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-        </div>
+        </motion.div>
         
         {/* Content Overlay */}
-        <div className="relative z-10 flex flex-col justify-center items-start p-20 text-white">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4 leading-tight">
+        <motion.div 
+          className="relative z-10 flex flex-col justify-center items-start p-20 text-white"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          >
+            <motion.h1 
+              className="text-4xl font-bold mb-4 leading-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
               Start Your Adventure
               <br />
-              with <span className="text-orange-300">BookingAdventures</span>
-            </h1>
-            <p className="text-lg opacity-90 max-w-md leading-relaxed">
+              with <motion.span 
+                className="text-orange-300"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+              >
+                BookingAdventures
+              </motion.span>
+            </motion.h1>
+            <motion.p 
+              className="text-lg opacity-90 max-w-md leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+            >
               Join thousands of travelers who trust us to plan their perfect journeys. 
               Create your account and unlock exclusive deals and personalized recommendations.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
           
           {/* Benefits */}
-          <div className="space-y-4 mt-8">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center">
+          <motion.div 
+            className="space-y-4 mt-8"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.0, ease: "easeOut" }}
+          >
+            <motion.div 
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.2, ease: "easeOut" }}
+              whileHover={{ x: 5 }}
+            >
+              <motion.div 
+                className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.4, delay: 1.3, ease: "easeOut" }}
+              >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-              </div>
+              </motion.div>
               <span className="text-sm opacity-90">Exclusive member-only deals</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center">
+            </motion.div>
+            <motion.div 
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
+              whileHover={{ x: 5 }}
+            >
+              <motion.div 
+                className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.4, delay: 1.5, ease: "easeOut" }}
+              >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-              </div>
+              </motion.div>
               <span className="text-sm opacity-90">Personalized travel recommendations</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center">
+            </motion.div>
+            <motion.div 
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.6, ease: "easeOut" }}
+              whileHover={{ x: 5 }}
+            >
+              <motion.div 
+                className="w-8 h-8 bg-orange-400/20 rounded-full flex items-center justify-center"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.4, delay: 1.7, ease: "easeOut" }}
+              >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-              </div>
+              </motion.div>
               <span className="text-sm opacity-90">24/7 travel support</span>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Right Side - Registration Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-orange-50/30 via-white to-blue-50/30">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md">
           {/* Logo for Mobile */}
           <div className="lg:hidden text-center mb-8">
@@ -198,10 +344,10 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
                       First Name
                     </label>
@@ -211,13 +357,13 @@ export default function RegisterPage() {
                       type="text"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-sm"
                       placeholder="John"
                       required
                       disabled={loading}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
                       Last Name
                     </label>
@@ -227,7 +373,7 @@ export default function RegisterPage() {
                       type="text"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-sm"
                       placeholder="Doe"
                       required
                       disabled={loading}
@@ -236,7 +382,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Email Field */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <label htmlFor="email" className="text-sm font-medium text-gray-700">
                     Email Address
                   </label>
@@ -247,7 +393,7 @@ export default function RegisterPage() {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-sm"
                       placeholder="john.doe@example.com"
                       required
                       disabled={loading}
@@ -259,7 +405,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Password Field */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <label htmlFor="password" className="text-sm font-medium text-gray-700">
                     Password
                   </label>
@@ -270,7 +416,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-sm"
                       placeholder="Create a strong password"
                       required
                       disabled={loading}
@@ -295,7 +441,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Confirm Password Field */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
                     Confirm Password
                   </label>
@@ -306,7 +452,7 @@ export default function RegisterPage() {
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-sm"
                       placeholder="Confirm your password"
                       required
                       disabled={loading}
