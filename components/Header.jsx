@@ -45,7 +45,14 @@ export default function Header() {
           </nav>
 
           {/* Login Button - Rounded button */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            <Button 
+              onClick={() => router.push("/admin")}
+              variant="outline"
+              className="cursor-pointer border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full font-medium transition-all duration-200"
+            >
+              Admin
+            </Button>
             <Button 
             onClick = {() => router.push("/login")}
               className="cursor-pointer bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-full font-medium transition-all duration-200"
