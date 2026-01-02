@@ -1,10 +1,26 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Home, Info, MapPin } from "lucide-react";
+import { Home, Info, MapPin, LogOut } from "lucide-react";
+import { useUser, useSupabase } from "@/lib/supabase/hooks";
+import { authAPI } from "@/lib/auth";
 
 export default function Header() {
   const router = useRouter();
+  const { user, loading } = useUser();
+  const supabase = useSupabase();
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force logout even if API call fails
+      await supabase.auth.signOut();
+      router.push("/login");
+    }
+  };
   return (
     <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -44,7 +60,7 @@ export default function Header() {
             </a>
           </nav>
 
-          {/* Login Button - Rounded button */}
+          {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
             <Button 
               onClick={() => router.push("/admin")}
@@ -53,12 +69,30 @@ export default function Header() {
             >
               Admin
             </Button>
-            <Button 
-            onClick = {() => router.push("/login")}
-              className="cursor-pointer bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-full font-medium transition-all duration-200"
-            >
-              Login
-            </Button>
+            
+            {loading ? (
+              <Button 
+                disabled
+                className="cursor-not-allowed bg-gray-300 text-gray-500 px-8 py-3 rounded-full font-medium"
+              >
+                Loading...
+              </Button>
+            ) : user ? (
+              <Button 
+                onClick={handleLogout}
+                className="cursor-pointer bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-medium transition-all duration-200 flex items-center gap-2"
+              >
+                <LogOut size={18} />
+                Logout
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => router.push("/login")}
+                className="cursor-pointer bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-full font-medium transition-all duration-200"
+              >
+                Login
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
