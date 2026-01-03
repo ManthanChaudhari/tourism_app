@@ -20,6 +20,7 @@ export default function Hero() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedDateObj, setSelectedDateObj] = useState<Date | null>(null)
   const [isSticky, setIsSticky] = useState(false)
+  const [successState, setSuccessState] = useState<number | null>(null)
 
   useEffect(() => {
     setIsDesktop(window.innerWidth >= 1024)
@@ -129,19 +130,31 @@ export default function Hero() {
 
   const handleLocationSelect = (country: string) => {
     setSelectedLocation(country)
-    setCurrentStep(2)
+    setSuccessState(1)
+    setTimeout(() => {
+      setCurrentStep(2)
+      setSuccessState(null)
+    }, 300)
   }
 
   const handleDateSelect = (day: number) => {
     const date = new Date(currentYear, currentMonth, day)
     setSelectedDateObj(date)
     setSelectedDate(formatDate(date))
-    setCurrentStep(3)
+    setSuccessState(2)
+    setTimeout(() => {
+      setCurrentStep(3)
+      setSuccessState(null)
+    }, 300)
   }
 
   const handlePassengerDone = () => {
-    setIsDialogOpen(false)
-    setCurrentStep(1)
+    setSuccessState(3)
+    setTimeout(() => {
+      setIsDialogOpen(false)
+      setCurrentStep(1)
+      setSuccessState(null)
+    }, 300)
   }
 
   const openDialog = (step: number) => {
@@ -153,8 +166,8 @@ export default function Hero() {
     <div className="relative bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
       {/* Hero Section */}
       <section className="relative pt-32 pb-32">
-        <AnimatedRoute startX={-200} startY={200} endX={1000} endY={180} duration={10} className="-z-10" />
-        <AnimatedCar startX={-200} startY={187} endX={1300} endY={184} duration={10} className="-z-10" />
+        <AnimatedRoute startX={-200} startY={205} endX={1000} endY={180} duration={20} className="-z-10" />
+        <AnimatedCar startX={-200} startY={187} endX={1300} endY={184} duration={20} className="-z-10" />
 
         <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -339,12 +352,17 @@ export default function Hero() {
                 </Button>
               </motion.div>
               
-              <div className="bg-white/75 backdrop-blur-lg border-0 overflow-hidden rounded-4xl shadow-md">
-                <div className="p-5 pt-8">
+              <div className="bg-white/75 backdrop-blur-lg border-0 overflow-hidden rounded-4xl shadow-md hover:shadow-lg transition-all duration-500">
+                <motion.div
+                  initial={{ scale: 0.98 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 1.5 }}
+                  className="p-5 pt-8"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <motion.div
                       className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
-                        focusedField === 1 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
+                        focusedField === 1 ? "bg-blue-50 ring-2 ring-blue-400 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
                       }`}
                       onClick={() => {
                         setFocusedField(1)
@@ -353,25 +371,37 @@ export default function Hero() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: "easeOut", delay: 1.0 }}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <label className="text-gray-900 font-semibold text-base block">
                         Location
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-sm">
+                        <motion.span
+                          key={selectedLocation}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="transition-colors duration-300 text-sm"
+                        >
                           {selectedLocation || "Where are you going?"}
-                        </span>
-                        <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        </motion.span>
+                        <motion.svg
+                          className="w-3 h-3 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          whileHover={{ x: 2 }}
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        </motion.svg>
                       </div>
                     </motion.div>
 
                     <motion.div
                       className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
-                        focusedField === 2 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
+                        focusedField === 2 ? "bg-blue-50 ring-2 ring-blue-400 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
                       }`}
                       onClick={() => {
                         setFocusedField(2)
@@ -380,25 +410,37 @@ export default function Hero() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: "easeOut", delay: 1.1 }}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <label className="text-gray-900 font-semibold text-base block">
                         Date
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-sm">
+                        <motion.span
+                          key={selectedDate}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="transition-colors duration-300 text-sm"
+                        >
                           {selectedDate || "When will you travel?"}
-                        </span>
-                        <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        </motion.span>
+                        <motion.svg
+                          className="w-3 h-3 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          whileHover={{ x: 2 }}
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        </motion.svg>
                       </div>
                     </motion.div>
 
                     <motion.div
                       className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
-                        focusedField === 3 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
+                        focusedField === 3 ? "bg-blue-50 ring-2 ring-blue-400 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
                       }`}
                       onClick={() => {
                         setFocusedField(3)
@@ -407,21 +449,33 @@ export default function Hero() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <label className="text-gray-900 font-semibold text-base block">
                         People
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-sm">
+                        <motion.span
+                          key={`${adults}-${children}`}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="transition-colors duration-300 text-sm"
+                        >
                           {adults + children > 0
                             ? `${adults} Adult${adults > 1 ? "s" : ""}, ${children} Child${children !== 1 ? "ren" : ""}`
                             : "How many people?"}
-                        </span>
-                        <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        </motion.span>
+                        <motion.svg
+                          className="w-3 h-3 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          whileHover={{ x: 2 }}
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        </motion.svg>
                       </div>
                     </motion.div>
 
@@ -433,19 +487,25 @@ export default function Hero() {
                       whileHover={{ scale: 1.08 }}
                       whileTap={{ scale: 0.92 }}
                     >
-                      <Button className="bg-gray-900 hover:bg-gray-800 text-white w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <Button className="bg-gray-900 hover:bg-gray-800 text-white w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:shadow-lg group">
+                        <motion.svg
+                          className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          whileHover={{ rotate: 15 }}
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                           />
-                        </svg>
+                        </motion.svg>
                       </Button>
                     </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -533,15 +593,21 @@ export default function Hero() {
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-gray-900 hover:bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Button className="bg-gray-900 hover:bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-lg group">
+                  <motion.svg
+                    className="w-3 h-3 transition-transform duration-300 group-hover:scale-110"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    whileHover={{ rotate: 15 }}
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
-                  </svg>
+                  </motion.svg>
                 </Button>
               </motion.div>
             </div>
@@ -550,129 +616,266 @@ export default function Hero() {
       </motion.div>
 
       {/* Dialog for search interactions */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader className="">
-            <DialogTitle className="">
-              {currentStep === 1 && "Select Location"}
-              {currentStep === 2 && "Select Date"}
-              {currentStep === 3 && "Number of Passengers"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-6">
-            {currentStep === 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {countries.map((country) => (
-                  <div
-                    key={country.name}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                    onClick={() => handleLocationSelect(country.name)}
-                  >
-                    <span className="text-2xl">{country.flag}</span>
-                    <span className="text-sm font-medium">{country.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {currentStep === 2 && (
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <Button variant="ghost" size="sm" onClick={handlePrevMonth} className="hover:bg-gray-100">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </Button>
-                  <span className="font-semibold">
-                    {getMonthName(currentMonth)} {currentYear}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={handleNextMonth} className="hover:bg-gray-100">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-7 gap-2 text-center text-sm mb-4">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="p-2 text-gray-500 font-medium">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2 text-center">
-                  {generateCalendarDays().map(({ day, key }) => (
-                    <button
-                      key={key}
-                      className={`p-2 rounded-lg transition-all duration-200 ${
-                        day === null
-                          ? "invisible"
-                          : isDateSelected(day, currentMonth, currentYear)
-                            ? "bg-blue-500 text-white"
-                            : "hover:bg-blue-50 text-gray-900"
-                      }`}
-                      onClick={() => day !== null && handleDateSelect(day)}
-                      disabled={day === null}
+      <AnimatePresence>
+        {isDialogOpen && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-2xl">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <DialogHeader className="">
+                  <DialogTitle className="">
+                    <motion.span
+                      key={currentStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="flex items-center gap-2"
                     >
-                      {day}
-                    </button>
-                  ))}
+                      {successState === currentStep && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+                        >
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </motion.div>
+                      )}
+                      {currentStep === 1 && "Select Location"}
+                      {currentStep === 2 && "Select Date"}
+                      {currentStep === 3 && "Number of Passengers"}
+                    </motion.span>
+                  </DialogTitle>
+                  {/* Progress indicator */}
+                  <div className="flex items-center gap-2 mt-4">
+                    {[1, 2, 3].map((step) => (
+                      <motion.div
+                        key={step}
+                        className={`h-1 rounded-full transition-all duration-300 ${
+                          step <= currentStep ? "bg-blue-500" : "bg-gray-200"
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: step <= currentStep ? "2rem" : "1rem" }}
+                        transition={{ duration: 0.3, delay: step * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                </DialogHeader>
+                <div className="py-6">
+                  <AnimatePresence mode="wait">
+                    {currentStep === 1 && (
+                      <motion.div
+                        key="location"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="grid grid-cols-4 gap-4"
+                      >
+                        {countries.map((country, index) => (
+                          <motion.div
+                            key={country.name}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.02, ease: "easeOut" }}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-sm"
+                            onClick={() => handleLocationSelect(country.name)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <span className="text-2xl">{country.flag}</span>
+                            <span className="text-sm font-medium">{country.name}</span>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                    {currentStep === 2 && (
+                      <motion.div
+                        key="date"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        <div className="flex items-center justify-between mb-6">
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button variant="ghost" size="sm" onClick={handlePrevMonth} className="hover:bg-gray-100 transition-all duration-200">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                              </svg>
+                            </Button>
+                          </motion.div>
+                          <motion.span
+                            key={`${currentMonth}-${currentYear}`}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="font-semibold"
+                          >
+                            {getMonthName(currentMonth)} {currentYear}
+                          </motion.span>
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button variant="ghost" size="sm" onClick={handleNextMonth} className="hover:bg-gray-100 transition-all duration-200">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </Button>
+                          </motion.div>
+                        </div>
+                        <div className="grid grid-cols-7 gap-2 text-center text-sm mb-4">
+                          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                            <div key={day} className="p-2 text-gray-500 font-medium">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+                        <motion.div
+                          key={`calendar-${currentMonth}-${currentYear}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="grid grid-cols-7 gap-2 text-center"
+                        >
+                          {generateCalendarDays().map(({ day, key }, index) => (
+                            <motion.button
+                              key={key}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.2, delay: index * 0.01 }}
+                              className={`p-2 rounded-lg transition-all duration-200 ${
+                                day === null
+                                  ? "invisible"
+                                  : isDateSelected(day, currentMonth, currentYear)
+                                    ? "bg-blue-500 text-white shadow-md"
+                                    : "hover:bg-blue-50 text-gray-900 hover:scale-110"
+                              }`}
+                              onClick={() => day !== null && handleDateSelect(day)}
+                              disabled={day === null}
+                              whileHover={day !== null ? { scale: 1.1 } : {}}
+                              whileTap={day !== null ? { scale: 0.95 } : {}}
+                            >
+                              {day}
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                      </motion.div>
+                    )}
+                    {currentStep === 3 && (
+                      <motion.div
+                        key="passengers"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="space-y-8"
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                          className="flex items-center justify-between"
+                        >
+                          <div>
+                            <div className="text-xl font-semibold">Adults</div>
+                            <div className="text-gray-500">aged 16+</div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <motion.button
+                              onClick={() => setAdults(Math.max(1, adults - 1))}
+                              className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              −
+                            </motion.button>
+                            <motion.span
+                              key={adults}
+                              initial={{ scale: 1.2 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-lg font-semibold min-w-8 text-center"
+                            >
+                              {adults}
+                            </motion.span>
+                            <motion.button
+                              onClick={() => setAdults(adults + 1)}
+                              className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              +
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.2 }}
+                          className="flex items-center justify-between"
+                        >
+                          <div>
+                            <div className="text-xl font-semibold">Children</div>
+                            <div className="text-gray-500">aged 2-15</div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <motion.button
+                              onClick={() => setChildren(Math.max(0, children - 1))}
+                              className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              −
+                            </motion.button>
+                            <motion.span
+                              key={children}
+                              initial={{ scale: 1.2 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-lg font-semibold min-w-8 text-center"
+                            >
+                              {children}
+                            </motion.span>
+                            <motion.button
+                              onClick={() => setChildren(children + 1)}
+                              className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              +
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-            )}
-            {currentStep === 3 && (
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-semibold">Adults</div>
-                    <div className="text-gray-500">aged 16+</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setAdults(Math.max(1, adults - 1))}
-                      className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="text-lg font-semibold min-w-8 text-center">{adults}</span>
-                    <button
-                      onClick={() => setAdults(adults + 1)}
-                      className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-semibold">Children</div>
-                    <div className="text-gray-500">aged 2-15</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setChildren(Math.max(0, children - 1))}
-                      className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="text-lg font-semibold min-w-8 text-center">{children}</span>
-                    <button
-                      onClick={() => setChildren(children + 1)}
-                      className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-gray-300 hover:bg-gray-50">
-              Cancel
-            </Button>
-            <Button onClick={handlePassengerDone} className="bg-blue-600 hover:bg-blue-700 text-white">Done</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="flex justify-end gap-3"
+                >
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-gray-300 hover:bg-gray-50 transition-all duration-200">
+                      Cancel
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button onClick={handlePassengerDone} className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200">
+                      Done
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
