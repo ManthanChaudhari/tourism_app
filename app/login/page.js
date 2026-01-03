@@ -258,28 +258,28 @@ export default function LoginPage() {
 
         {/* Right Side - Login Form */}
         <div className="w-full md:w-full lg:w-1/2 xl:w-3/5 relative">
-          <div className="relative z-10 min-h-screen flex items-center justify-center md:justify-center lg:justify-center xl:justify-center px-4 md:px-6 lg:pl-8 lg:pr-16 xl:pl-12 xl:pr-20 py-8 md:py-12">
+          <div className="relative z-10 min-h-screen flex items-center justify-center md:justify-center lg:justify-center xl:justify-center px-4 md:px-6 lg:pl-8 lg:pr-16 xl:pl-12 xl:pr-20 py-4 md:py-6">
             <div className="w-full max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               >
-                <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-lg shadow-black/5 rounded-2xl lg:rounded-3xl overflow-hidden relative">
+                <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-lg shadow-black/5 rounded-xl overflow-hidden relative">
                   {/* Top accent line */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600"></div>
                   
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-50/20 via-transparent to-orange-50/10 pointer-events-none"></div>
                   
-                  <CardContent className="p-4 md:p-5 lg:p-6 relative z-10">
+                  <CardContent className="p-3 md:p-4 relative z-10">
                     {error && (
-                      <div className={`mb-4 lg:mb-6 p-3 lg:p-4 border rounded-xl lg:rounded-2xl ${
+                      <div className={`mb-3 p-2 border rounded-lg ${
                         emailNotConfirmed 
                           ? 'bg-yellow-50/90 border-yellow-200' 
                           : 'bg-red-50/90 border-red-200'
                       }`}>
-                        <p className={`text-xs lg:text-sm ${
+                        <p className={`text-xs ${
                           emailNotConfirmed 
                             ? 'text-yellow-800' 
                             : 'text-red-800'
@@ -287,10 +287,10 @@ export default function LoginPage() {
                           {error}
                         </p>
                         {emailNotConfirmed && (
-                          <div className="mt-2 lg:mt-3">
+                          <div className="mt-2">
                             <Link 
                               href="/confirm-email" 
-                              className="inline-flex items-center text-xs lg:text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                              className="inline-flex items-center text-xs font-medium text-orange-600 hover:text-orange-700 transition-colors"
                             >
                               Go to email confirmation page
                             </Link>
@@ -299,27 +299,27 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    <div className="text-center mb-4 lg:mb-6">
+                    <div className="text-center mb-3">
                       {/* Tiny logo */}
-                      <div className="flex justify-center mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex justify-center mb-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
                         </div>
                       </div>
-                      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-2">Welcome Back</h2>
-                      <p className="text-sm lg:text-base text-black/80">Sign in to your account to continue</p>
+                      <h2 className="text-xl md:text-2xl font-bold text-black mb-1">Welcome Back</h2>
+                      <p className="text-sm text-black/80">Sign in to your account to continue</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
-                      <div className="space-y-2 lg:space-y-3">
-                        <label htmlFor="email" className="text-sm lg:text-base font-medium text-black">
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                      <div className="space-y-1">
+                        <label htmlFor="email" className="text-sm font-medium text-black">
                           Email Address
                         </label>
                         <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                             </svg>
                           </div>
@@ -328,7 +328,7 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 border border-gray-200/60 rounded-xl lg:rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200 bg-gray-50/30 text-sm lg:text-base min-h-[2.5rem] lg:min-h-[3rem]"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200 bg-gray-50/30 text-sm"
                             placeholder="Enter your email"
                             required
                             disabled={loading}
@@ -336,13 +336,13 @@ export default function LoginPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-2 lg:space-y-3">
-                        <label htmlFor="password" className="text-sm lg:text-base font-medium text-black">
+                      <div className="space-y-1">
+                        <label htmlFor="password" className="text-sm font-medium text-black">
                           Password
                         </label>
                         <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                           </div>
@@ -351,7 +351,7 @@ export default function LoginPage() {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-12 py-3 border border-gray-200/60 rounded-xl lg:rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200 bg-gray-50/30 text-sm lg:text-base min-h-[2.5rem] lg:min-h-[3rem]"
+                            className="w-full pl-10 pr-10 py-2 border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200 bg-gray-50/30 text-sm"
                             placeholder="Enter your password"
                             required
                             disabled={loading}
@@ -359,14 +359,14 @@ export default function LoginPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                           >
                             {showPassword ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                               </svg>
                             ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
@@ -381,9 +381,9 @@ export default function LoginPage() {
                             type="checkbox"
                             className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
                           />
-                          <span className="ml-3 text-sm lg:text-base text-black/80">Remember me</span>
+                          <span className="ml-3 text-sm text-black/80">Remember me</span>
                         </label>
-                        <Link href="/forgot-password" className="text-sm lg:text-base text-orange-500 hover:text-orange-600 font-medium transition-colors">
+                        <Link href="/forgot-password" className="text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
                           Forgot password?
                         </Link>
                       </div>
@@ -391,13 +391,13 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 lg:py-3.5 rounded-xl lg:rounded-2xl font-semibold text-sm lg:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 min-h-[2.5rem] lg:min-h-[3rem]"
+                        className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0"
                       >
                         {loading ? "Signing In..." : "Sign In"}
                       </Button>
 
-                      <div className="text-center mt-4 lg:mt-5">
-                        <p className="text-sm lg:text-base text-black/80">
+                      <div className="text-center mt-2">
+                        <p className="text-sm text-black/80">
                           Don't have an account?{" "}
                           <Link href="/register" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
                             Sign Up
