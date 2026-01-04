@@ -30,7 +30,60 @@ CREATE TABLE packages (
 );
 ```
 
-### 2. profiles (if not exists)
+### 2. locations
+Location management table for states and cities.
+
+```sql
+CREATE TABLE locations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('state', 'city')),
+  parent_id UUID REFERENCES locations(id),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Constraints
+  CONSTRAINT check_city_has_parent CHECK (
+    (type = 'city' AND parent_id IS NOT NULL) OR 
+    (type = 'state' AND parent_id IS NULL)
+  )
+);
+
+-- Indexes for performance
+CREATE INDEX idx_locations_type ON locations(type);
+CREATE INDEX idx_locations_parent_id ON locations(parent_id);
+CREATE INDEX idx_locations_slug ON locations(slug);
+CREATE INDEX idx_locations_active ON locations(is_active);
+CREATE INDEX idx_locations_type_active ON locations(type, is_active);
+
+-- Function to auto-generate slug from name
+CREATE OR REPLACE FUNCTION generate_slug(input_text TEXT)
+RETURNS TEXT AS $$
+BEGIN
+  RETURN lower(regexp_replace(trim(input_text), '[^a-zA-Z0-9]+', '-', 'g'));
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-generate slug if not provided
+CREATE OR REPLACE FUNCTION set_location_slug()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.slug IS NULL OR NEW.slug = '' THEN
+    NEW.slug := generate_slug(NEW.name);
+  END IF;
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_location_slug
+  BEFORE INSERT OR UPDATE ON locations
+  FOR EACH ROW EXECUTE FUNCTION set_location_slug();
+```
+
+### 3. profiles (if not exists)
 User profiles table to store user roles and additional information.
 
 ```sql
@@ -99,6 +152,44 @@ USING (bucket_id = 'package-images' AND auth.uid() IN (
 ```
 
 ## Row Level Security (RLS)
+
+### locations table policies
+
+```sql
+-- Enable RLS
+ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
+
+-- Allow public to read active locations
+CREATE POLICY "Allow public read active locations" ON locations
+FOR SELECT TO public
+USING (is_active = true);
+
+-- Allow admins to read all locations
+CREATE POLICY "Allow admin read all locations" ON locations
+FOR SELECT TO authenticated
+USING (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Allow admins to insert locations
+CREATE POLICY "Allow admin insert locations" ON locations
+FOR INSERT TO authenticated
+WITH CHECK (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Allow admins to update locations
+CREATE POLICY "Allow admin update locations" ON locations
+FOR UPDATE TO authenticated
+USING (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Prevent deletion of locations (use is_active instead)
+CREATE POLICY "Prevent location deletion" ON locations
+FOR DELETE TO authenticated
+USING (false);
+```
 
 ### packages table policies
 

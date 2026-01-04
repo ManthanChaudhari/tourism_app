@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   Package, 
   Users,
+  MapPin,
   Menu, 
   X,
   LogOut
@@ -27,6 +28,11 @@ const sidebarItems = [
     name: 'Users',
     href: '/admin/users',
     icon: Users
+  },
+  {
+    name: 'Destinations',
+    href: '/admin/locations',
+    icon: MapPin
   }
 ]
 
