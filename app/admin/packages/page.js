@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { 
   Plus, 
@@ -12,77 +12,151 @@ import {
   MoreHorizontal,
   MapPin,
   Calendar,
-  DollarSign
+  DollarSign,
+  Package,
+  Loader2
 } from 'lucide-react'
 
-// Mock data for packages
-const mockPackages = [
-  {
-    id: 1,
-    title: 'Bali Adventure Package',
-    destination: 'Bali, Indonesia',
-    duration: '7 days, 6 nights',
-    price: 1299,
-    status: 'published',
-    bookings: 45,
-    image: '/api/placeholder/300/200',
-    createdAt: '2024-01-10'
-  },
-  {
-    id: 2,
-    title: 'Paris Romance Getaway',
-    destination: 'Paris, France',
-    duration: '5 days, 4 nights',
-    price: 1899,
-    status: 'published',
-    bookings: 38,
-    image: '/api/placeholder/300/200',
-    createdAt: '2024-01-08'
-  },
-  {
-    id: 3,
-    title: 'Tokyo Explorer',
-    destination: 'Tokyo, Japan',
-    duration: '6 days, 5 nights',
-    price: 1599,
-    status: 'draft',
-    bookings: 0,
-    image: '/api/placeholder/300/200',
-    createdAt: '2024-01-05'
-  },
-  {
-    id: 4,
-    title: 'Dubai Luxury Experience',
-    destination: 'Dubai, UAE',
-    duration: '4 days, 3 nights',
-    price: 2299,
-    status: 'published',
-    bookings: 25,
-    image: '/api/placeholder/300/200',
-    createdAt: '2024-01-03'
-  }
-]
-
 export default function PackagesPage() {
-  const [packages, setPackages] = useState(mockPackages)
+  const [packages, setPackages] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [successMessage, setSuccessMessage] = useState('')
 
-  const filteredPackages = packages.filter(pkg => {
+  // Fetch packages from API
+  useEffect(() => {
+    fetchPackages()
+    
+    // Check for success message from URL params
+    const urlParams = new URLSearchParams(window.location.search)
+    const successParam = urlParams.get('success')
+    if (successParam === 'created') {
+      setSuccessMessage('Package created successfully!')
+    } else if (successParam === 'deleted') {
+      setSuccessMessage('Package deleted successfully!')
+    }
+    
+    if (successParam) {
+      // Clear the URL parameter
+      window.history.replaceState({}, '', window.location.pathname)
+      // Clear message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000)
+    }
+  }, [])
+
+  const fetchPackages = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/packages', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch packages')
+      }
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setPackages(data.packages || [])
+      } else {
+        throw new Error(data.error || 'Failed to fetch packages')
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error)
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Format package data for display
+  const formatPackageForDisplay = (pkg) => ({
+    ...pkg,
+    duration: `${pkg.days} days, ${pkg.nights} nights`,
+    price: pkg.price_per_person,
+    image: pkg.thumbnail_image_url || '/api/placeholder/300/200',
+    createdAt: new Date(pkg.created_at).toLocaleDateString(),
+    // TODO: Replace with actual bookings count when bookings table is implemented
+    bookings: 0
+  })
+
+  const filteredPackages = packages.map(formatPackageForDisplay).filter(pkg => {
     const matchesSearch = pkg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          pkg.destination.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || pkg.status === statusFilter
-    return matchesSearch && matchesStatus
+    const matchesCategory = categoryFilter === 'all' || pkg.category === categoryFilter
+    return matchesSearch && matchesStatus && matchesCategory
   })
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this package?')) {
-      setPackages(packages.filter(pkg => pkg.id !== id))
+      try {
+        const response = await fetch(`/api/packages/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          // Refresh the packages list
+          fetchPackages()
+        } else {
+          const errorData = await response.json()
+          alert(errorData.error || 'Failed to delete package')
+        }
+      } catch (error) {
+        console.error('Error deleting package:', error)
+        alert('Failed to delete package')
+      }
     }
+  }
+
+  // Get unique categories from packages
+  const categories = [...new Set(packages.map(pkg => pkg.category).filter(Boolean))]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading packages...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading packages: {error}</p>
+          <button
+            onClick={fetchPackages}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p className="text-green-600 text-sm">{successMessage}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -124,12 +198,17 @@ export default function PackagesPage() {
           </select>
         </div>
         <div className="sm:w-48">
-          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-            <option>All Categories</option>
-            <option>Adventure</option>
-            <option>Romance</option>
-            <option>Cultural</option>
-            <option>Luxury</option>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -167,7 +246,7 @@ export default function PackagesPage() {
               {filteredPackages.map((pkg) => (
                 <tr key={pkg.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{pkg.title}</div>
+                    <div className="text-sm font-medium text-gray-900">{pkg.title || 'Untitled'}</div>
                     <div className="text-sm text-gray-500">{pkg.duration}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -180,13 +259,13 @@ export default function PackagesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pkg.destination}
+                    {pkg.destination || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${pkg.price}
+                    ${pkg.price?.toLocaleString() || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pkg.bookings}
+                    {pkg.bookings || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {pkg.createdAt}
@@ -200,22 +279,6 @@ export default function PackagesPage() {
                       >
                         <Eye className="h-4 w-4" />
                       </Link>
-                      <button
-                        className="p-1 text-gray-400 hover:text-yellow-600 transition-colors"
-                        title="Favorite"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                      </button>
-                      <button
-                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Copy"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      </button>
                       <Link
                         href={`/admin/packages/${pkg.id}/edit`}
                         className="p-1 text-gray-400 hover:text-green-600 transition-colors"
@@ -239,7 +302,6 @@ export default function PackagesPage() {
         </div>
       </div>
 
-      {/* Empty State */}
       {filteredPackages.length === 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
