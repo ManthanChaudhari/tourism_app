@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Package, 
+  Users,
   Menu, 
   X,
   LogOut
@@ -21,6 +22,11 @@ const sidebarItems = [
     name: 'Packages',
     href: '/admin/packages',
     icon: Package
+  },
+  {
+    name: 'Users',
+    href: '/admin/users',
+    icon: Users
   }
 ]
 
