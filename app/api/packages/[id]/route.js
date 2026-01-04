@@ -5,31 +5,39 @@ export async function GET(request, { params }) {
   try {
     const supabase = await createSupabaseServerClient()
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const publicAccess = searchParams.get('public') === 'true'
     
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in' },
-        { status: 401 }
-      )
-    }
+    // For public access, we don't require authentication
+    if (!publicAccess) {
+      // Verify user session for admin access
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Please log in' },
+          { status: 401 }
+        )
+      }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+      // Check if user is admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    if (profileError || profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      )
+      if (profileError || profile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Forbidden - Admin access required' },
+          { status: 403 }
+        )
+      }
     }
 
     const awaitedParams = await params;
     const packageId = awaitedParams.id;
-    console.log({awaitedParams, request})
 
     if (!packageId) {
       return NextResponse.json(
@@ -38,11 +46,37 @@ export async function GET(request, { params }) {
       )
     }
 
-    const { data: packageData, error: fetchError } = await supabase
+    // Build the query
+    let query = supabase
       .from('packages')
-      .select('*')
+      .select(publicAccess ? `
+        id,
+        title,
+        destination,
+        category,
+        days,
+        nights,
+        price_per_person,
+        discount,
+        description,
+        thumbnail_image_url,
+        gallery_image_urls,
+        inclusions,
+        exclusions,
+        itinerary,
+        pickup_location,
+        drop_location,
+        created_at,
+        updated_at
+      ` : '*')
       .eq('id', packageId)
-      .single()
+
+    // For public access, only show published packages
+    if (publicAccess) {
+      query = query.eq('status', 'published')
+    }
+
+    const { data: packageData, error: fetchError } = await query.single()
 
     if (fetchError) {
       console.error('Database fetch error:', fetchError)
@@ -60,9 +94,39 @@ export async function GET(request, { params }) {
       )
     }
 
+    // Format package for public consumption if needed
+    let formattedPackage = packageData
+    if (publicAccess) {
+      formattedPackage = {
+        id: packageData.id,
+        title: packageData.title,
+        destination: packageData.destination,
+        category: packageData.category,
+        duration: `${packageData.days} days, ${packageData.nights} nights`,
+        days: packageData.days,
+        nights: packageData.nights,
+        price: packageData.price_per_person,
+        originalPrice: packageData.discount ? packageData.price_per_person : null,
+        discountedPrice: packageData.discount ? 
+          Math.round(packageData.price_per_person - (packageData.price_per_person * packageData.discount / 100)) : 
+          packageData.price_per_person,
+        discount: packageData.discount,
+        description: packageData.description,
+        image: packageData.thumbnail_image_url,
+        images: packageData.gallery_image_urls || [],
+        inclusions: packageData.inclusions || [],
+        exclusions: packageData.exclusions || [],
+        itinerary: packageData.itinerary || [],
+        pickupLocation: packageData.pickup_location,
+        dropLocation: packageData.drop_location,
+        createdAt: packageData.created_at,
+        updatedAt: packageData.updated_at
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      package: packageData
+      package: formattedPackage
     })
 
   } catch (error) {

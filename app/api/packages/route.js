@@ -143,35 +143,100 @@ export async function GET(request) {
   try {
     const supabase = await createSupabaseServerClient()
     
-    // Verify user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in' },
-        { status: 401 }
-      )
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page')) || 1
+    const limit = parseInt(searchParams.get('limit')) || 10
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const category = searchParams.get('category') || ''
+    const sortBy = searchParams.get('sortBy') || 'created_at'
+    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const publicAccess = searchParams.get('public') === 'true'
+
+    // For public access, we don't require authentication
+    if (!publicAccess) {
+      // Verify user session for admin access
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Please log in' },
+          { status: 401 }
+        )
+      }
+
+      // Check if user is admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || profile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Forbidden - Admin access required' },
+          { status: 403 }
+        )
+      }
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Validate pagination parameters
+    const validatedPage = Math.max(1, page)
+    const validatedLimit = Math.min(Math.max(1, limit), publicAccess ? 50 : 100) // Lower limit for public access
+    const offset = (validatedPage - 1) * validatedLimit
 
-    if (profileError || profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      )
-    }
+    // Validate sort parameters
+    const validSortFields = ['created_at', 'updated_at', 'title', 'destination', 'price_per_person', 'status']
+    const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'created_at'
+    const validatedSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'desc'
 
-    // Get all packages
-    const { data: packages, error: fetchError } = await supabase
+    // Build the query
+    let query = supabase
       .from('packages')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .select(publicAccess ? `
+        id,
+        title,
+        destination,
+        category,
+        days,
+        nights,
+        price_per_person,
+        discount,
+        description,
+        thumbnail_image_url,
+        gallery_image_urls,
+        created_at,
+        updated_at
+      ` : '*', { count: 'exact' })
+
+    // For public access, only show published packages
+    if (publicAccess) {
+      query = query.eq('status', 'published')
+    } else {
+      // Apply status filter for admin access
+      if (status && status !== 'all') {
+        query = query.eq('status', status)
+      }
+    }
+
+    // Apply search filter
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,destination.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    // Apply category filter
+    if (category && category !== 'all') {
+      query = query.eq('category', category)
+    }
+
+    // Apply sorting
+    query = query.order(validatedSortBy, { ascending: validatedSortOrder === 'asc' })
+
+    // Apply pagination
+    query = query.range(offset, offset + validatedLimit - 1)
+
+    const { data: packages, error: fetchError, count } = await query
 
     if (fetchError) {
       console.error('Database fetch error:', fetchError)
@@ -181,9 +246,55 @@ export async function GET(request) {
       )
     }
 
+    // Format packages for public consumption if needed
+    let formattedPackages = packages || []
+    if (publicAccess) {
+      formattedPackages = packages.map(pkg => ({
+        id: pkg.id,
+        title: pkg.title,
+        destination: pkg.destination,
+        category: pkg.category,
+        duration: `${pkg.days} days, ${pkg.nights} nights`,
+        days: pkg.days,
+        nights: pkg.nights,
+        price: pkg.price_per_person,
+        originalPrice: pkg.discount ? pkg.price_per_person : null,
+        discountedPrice: pkg.discount ? pkg.price_per_person - (pkg.price_per_person * pkg.discount / 100) : pkg.price_per_person,
+        discount: pkg.discount,
+        description: pkg.description,
+        image: pkg.thumbnail_image_url,
+        images: pkg.gallery_image_urls || [],
+        createdAt: pkg.created_at,
+        updatedAt: pkg.updated_at
+      }))
+    }
+
+    // Calculate pagination metadata
+    const totalItems = count || 0
+    const totalPages = Math.ceil(totalItems / validatedLimit)
+    const hasNextPage = validatedPage < totalPages
+    const hasPrevPage = validatedPage > 1
+
     return NextResponse.json({
       success: true,
-      packages
+      packages: formattedPackages,
+      pagination: {
+        currentPage: validatedPage,
+        totalPages,
+        totalItems,
+        itemsPerPage: validatedLimit,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? validatedPage + 1 : null,
+        prevPage: hasPrevPage ? validatedPage - 1 : null
+      },
+      filters: {
+        search,
+        status: status || 'all',
+        category: category || 'all',
+        sortBy: validatedSortBy,
+        sortOrder: validatedSortOrder
+      }
     })
 
   } catch (error) {
