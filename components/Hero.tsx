@@ -151,7 +151,7 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
+    <div className="relative bg-linear-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
       {/* Hero Section */}
       <section className="relative pt-32 pb-32">
         <AnimatedRoute startX={-200} startY={200} endX={1000} endY={180} duration={10} className="-z-10" />
@@ -425,7 +425,7 @@ export default function Hero() {
                             )
                             : "How many people?"}
                         </span>
-                        <svg className="w-3 h-3 ml-2 inline flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 ml-2 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -528,7 +528,7 @@ export default function Hero() {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     {adults + children > 0
                       ? `${adults + children} Guest${adults + children > 1 ? "s" : ""}`
                       : "Guests"}
