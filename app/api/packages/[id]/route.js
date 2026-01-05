@@ -46,7 +46,6 @@ export async function GET(request, { params }) {
       )
     }
 
-    // Build the query
     let query = supabase
       .from('packages')
       .select(publicAccess ? `
@@ -67,8 +66,12 @@ export async function GET(request, { params }) {
         pickup_location,
         drop_location,
         created_at,
-        updated_at
-      ` : '*')
+        updated_at,
+        destination_location:locations(id, name, slug, type, parent:parent_id(name))
+      ` : `
+        *,
+        destination_location:locations(id, name, slug, type, parent:parent_id(name))
+      `)
       .eq('id', packageId)
 
     // For public access, only show published packages
@@ -97,10 +100,20 @@ export async function GET(request, { params }) {
     // Format package for public consumption if needed
     let formattedPackage = packageData
     if (publicAccess) {
+      // Get destination name - prefer location data over text field
+      let destinationName = packageData.destination
+      if (packageData.destination_location) {
+        if (packageData.destination_location.type === 'city' && packageData.destination_location.parent) {
+          destinationName = `${packageData.destination_location.name}, ${packageData.destination_location.parent.name}`
+        } else {
+          destinationName = packageData.destination_location.name
+        }
+      }
+
       formattedPackage = {
         id: packageData.id,
         title: packageData.title,
-        destination: packageData.destination,
+        destination: destinationName,
         category: packageData.category,
         duration: `${packageData.days} days, ${packageData.nights} nights`,
         days: packageData.days,
@@ -121,6 +134,21 @@ export async function GET(request, { params }) {
         dropLocation: packageData.drop_location,
         createdAt: packageData.created_at,
         updatedAt: packageData.updated_at
+      }
+    } else {
+      // For admin access, also format destination names
+      let destinationName = packageData.destination
+      if (packageData.destination_location) {
+        if (packageData.destination_location.type === 'city' && packageData.destination_location.parent) {
+          destinationName = `${packageData.destination_location.name}, ${packageData.destination_location.parent.name}`
+        } else {
+          destinationName = packageData.destination_location.name
+        }
+      }
+
+      formattedPackage = {
+        ...packageData,
+        destination_name: destinationName
       }
     }
 
@@ -201,7 +229,7 @@ export async function PUT(request, { params }) {
     
     const packageData = {
       title: formData.get('title'),
-      destination: formData.get('destination'),
+      destination: formData.get('destination'), // This will now be a location ID or text
       category: formData.get('category'),
       days: parseInt(formData.get('days')),
       nights: parseInt(formData.get('nights')),
@@ -217,7 +245,15 @@ export async function PUT(request, { params }) {
       updated_at: new Date().toISOString()
     }
 
-    if (!packageData.title || !packageData.destination || !packageData.days || 
+    // Handle destination field - check if it's a UUID (location ID) or text
+    const destinationValue = formData.get('destination')
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(destinationValue)
+    
+    if (isUUID) {
+      packageData.destination = destinationValue
+    }
+
+    if (!packageData.title || !destinationValue || !packageData.days || 
         !packageData.nights || !packageData.price_per_person || !packageData.category) {
       return NextResponse.json(
         { error: 'Missing required fields' },

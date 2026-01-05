@@ -19,6 +19,7 @@ import {
   Navigation
 } from 'lucide-react'
 import Link from 'next/link'
+import DestinationDropdown from '@/components/admin/DestinationDropdown'
 
 const PACKAGE_CATEGORIES = [
   'Adventure',
@@ -76,7 +77,7 @@ export default function EditPackagePage() {
         const data = result.package
         setFormData({
           title: data.title || '',
-          destination: data.destination || '',
+          destination: data.destination || '', // Use location ID if available, fallback to text
           category: data.category || '',
           days: data.days?.toString() || '',
           nights: data.nights?.toString() || '',
@@ -356,12 +357,10 @@ export default function EditPackagePage() {
                     <MapPin className="h-4 w-4 inline mr-2" />
                     Destination *
                   </label>
-                  <input
-                    type="text"
+                  <DestinationDropdown
                     value={formData.destination}
-                    onChange={(e) => handleInputChange('destination', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    placeholder="e.g., Bali, Indonesia"
+                    onChange={(value) => handleInputChange('destination', value)}
+                    placeholder="Select destination..."
                     required
                   />
                 </div>

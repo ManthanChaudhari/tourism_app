@@ -9,7 +9,8 @@ Main table for storing tour package information.
 CREATE TABLE packages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  destination VARCHAR(255) NOT NULL,
+  destination VARCHAR(255), -- Legacy text field, used as fallback
+  destination_id UUID REFERENCES locations(id), -- New foreign key to locations table
   category VARCHAR(50) NOT NULL,
   days INTEGER NOT NULL,
   nights INTEGER NOT NULL,
@@ -28,6 +29,14 @@ CREATE TABLE packages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add foreign key constraint
+ALTER TABLE packages 
+ADD CONSTRAINT packages_destination_fkey 
+FOREIGN KEY (destination_id) REFERENCES locations(id);
+
+-- Add index for the foreign key
+CREATE INDEX idx_packages_destination_id ON packages(destination_id);
 ```
 
 ### 2. locations
@@ -329,3 +338,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (if needed for admin operations)
 5. Public users can only view published packages
 6. The discount field stores percentage values (0-100)
 7. Categories are stored as lowercase strings for consistency
+8. **Destination Handling**: The packages table supports both legacy text destinations (`destination` field) and new location references (`destination_id` field). When `destination_id` is set, it takes precedence over the text field. This allows for gradual migration and better data consistency.
+9. **Location Integration**: The admin forms now use a searchable dropdown that pulls from the locations table, storing the location ID in `destination_id` field.
+10. **Backward Compatibility**: Existing packages with text destinations will continue to work, while new packages will use location IDs for better data integrity.

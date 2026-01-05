@@ -33,7 +33,7 @@ export async function POST(request) {
     // Extract form fields
     const packageData = {
       title: formData.get('title'),
-      destination: formData.get('destination'),
+      destination: formData.get('destination'), // This will now be a location ID or text
       category: formData.get('category'),
       days: parseInt(formData.get('days')),
       nights: parseInt(formData.get('nights')),
@@ -49,7 +49,16 @@ export async function POST(request) {
       created_by: user.id
     }
 
-    if (!packageData.title || !packageData.destination || !packageData.days || 
+    // Handle destination field - check if it's a UUID (location ID) or text
+    const destinationValue = formData.get('destination')
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(destinationValue)
+    
+    if (isUUID) {
+      // It's a location ID
+      packageData.destination = destinationValue
+    }
+
+    if (!packageData.title || !destinationValue || !packageData.days || 
         !packageData.nights || !packageData.price_per_person || !packageData.category) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -191,7 +200,7 @@ export async function GET(request) {
     const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'created_at'
     const validatedSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'desc'
 
-    // Build the query
+    // Build the query with proper join syntax
     let query = supabase
       .from('packages')
       .select(publicAccess ? `
@@ -207,8 +216,12 @@ export async function GET(request) {
         thumbnail_image_url,
         gallery_image_urls,
         created_at,
-        updated_at
-      ` : '*', { count: 'exact' })
+        updated_at,
+        destination_location:locations(id, name, slug, type, parent:parent_id(name))
+      ` : `
+        *,
+        destination_location:locations(id, name, slug, type, parent:parent_id(name))
+      `, { count: 'exact' })
 
     // For public access, only show published packages
     if (publicAccess) {
@@ -249,24 +262,53 @@ export async function GET(request) {
     // Format packages for public consumption if needed
     let formattedPackages = packages || []
     if (publicAccess) {
-      formattedPackages = packages.map(pkg => ({
-        id: pkg.id,
-        title: pkg.title,
-        destination: pkg.destination,
-        category: pkg.category,
-        duration: `${pkg.days} days, ${pkg.nights} nights`,
-        days: pkg.days,
-        nights: pkg.nights,
-        price: pkg.price_per_person,
-        originalPrice: pkg.discount ? pkg.price_per_person : null,
-        discountedPrice: pkg.discount ? pkg.price_per_person - (pkg.price_per_person * pkg.discount / 100) : pkg.price_per_person,
-        discount: pkg.discount,
-        description: pkg.description,
-        image: pkg.thumbnail_image_url,
-        images: pkg.gallery_image_urls || [],
-        createdAt: pkg.created_at,
-        updatedAt: pkg.updated_at
-      }))
+      formattedPackages = packages.map(pkg => {
+        // Get destination name - prefer location data over text field
+        let destinationName = pkg.destination
+        if (pkg.destination_location) {
+          if (pkg.destination_location.type === 'city' && pkg.destination_location.parent) {
+            destinationName = `${pkg.destination_location.name}, ${pkg.destination_location.parent.name}`
+          } else {
+            destinationName = pkg.destination_location.name
+          }
+        }
+
+        return {
+          id: pkg.id,
+          title: pkg.title,
+          destination: destinationName,
+          category: pkg.category,
+          duration: `${pkg.days} days, ${pkg.nights} nights`,
+          days: pkg.days,
+          nights: pkg.nights,
+          price: pkg.price_per_person,
+          originalPrice: pkg.discount ? pkg.price_per_person : null,
+          discountedPrice: pkg.discount ? pkg.price_per_person - (pkg.price_per_person * pkg.discount / 100) : pkg.price_per_person,
+          discount: pkg.discount,
+          description: pkg.description,
+          image: pkg.thumbnail_image_url,
+          images: pkg.gallery_image_urls || [],
+          createdAt: pkg.created_at,
+          updatedAt: pkg.updated_at
+        }
+      })
+    } else {
+      // For admin access, also format destination names
+      formattedPackages = packages.map(pkg => {
+        let destinationName = pkg.destination
+        if (pkg.destination_location) {
+          if (pkg.destination_location.type === 'city' && pkg.destination_location.parent) {
+            destinationName = `${pkg.destination_location.name}, ${pkg.destination_location.parent.name}`
+          } else {
+            destinationName = pkg.destination_location.name
+          }
+        }
+
+        return {
+          ...pkg,
+          destination_name: destinationName
+        }
+      })
     }
 
     // Calculate pagination metadata
