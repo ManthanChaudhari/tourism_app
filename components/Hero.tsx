@@ -342,9 +342,9 @@ export default function Hero() {
               
               <div className="bg-white/75 backdrop-blur-lg border-0 overflow-hidden rounded-4xl shadow-md">
                 <div className="p-5 pt-8">
-                  <div className="grid grid-cols-6 sm:grid-cols-4 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 items-end">
+                  <div className="grid grid-cols-12 sm:grid-cols-4 md:grid-cols-4 gap-1 sm:gap-3 md:gap-4 items-center sm:items-end">
                     <motion.div
-                      className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
+                      className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 col-span-3 sm:col-span-1 ${
                         focusedField === 1 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                       }`}
                       onClick={() => {
@@ -361,17 +361,17 @@ export default function Hero() {
                         Location
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-sm">
+                        <span className="transition-colors duration-300 text-sm hidden sm:block">
                           {selectedLocation || "Where are you going?"}
                         </span>
-                        <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 ml-2 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
                     </motion.div>
 
                     <motion.div
-                      className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 ${
+                      className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 col-span-3 sm:col-span-1 ml-2 sm:ml-0 ${
                         focusedField === 2 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                       }`}
                       onClick={() => {
@@ -388,17 +388,17 @@ export default function Hero() {
                         Date
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-sm">
+                        <span className="transition-colors duration-300 text-sm hidden sm:block">
                           {selectedDate || "When will you travel?"}
                         </span>
-                        <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 ml-2 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
                     </motion.div>
 
                     <motion.div
-                      className={`space-y-1 cursor-pointer p-8 sm:p-4 rounded-lg transition-all duration-300 col-span-3 sm:col-span-1 min-w-0 ${
+                      className={`space-y-1 cursor-pointer p-3 rounded-lg transition-all duration-300 col-span-3 sm:col-span-1 min-w-0 ${
                         focusedField === 3 ? "bg-blue-50 ring-2 ring-blue-400" : "hover:bg-gray-50"
                       }`}
                       onClick={() => {
@@ -415,7 +415,7 @@ export default function Hero() {
                         People
                       </label>
                       <div className="flex items-center text-gray-500 group">
-                        <span className="transition-colors duration-300 text-xs sm:text-sm flex items-center gap-1">
+                        <span className="transition-colors duration-300 text-xs sm:text-sm items-center gap-1 hidden sm:flex">
                           {adults + children > 0
                             ? (
                               <>
@@ -425,14 +425,14 @@ export default function Hero() {
                             )
                             : "How many people?"}
                         </span>
-                        <svg className="w-3 h-3 ml-2 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 ml-2 shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
                     </motion.div>
 
                     <motion.div
-                      className="flex justify-center md:justify-end"
+                      className="flex justify-start sm:justify-center md:justify-end col-span-3 sm:col-span-1 ml-2 sm:ml-0"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: "easeOut", delay: 1.3 }}
@@ -558,7 +558,7 @@ export default function Hero() {
 
       {/* Dialog for search interactions */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] sm:max-h-none overflow-y-auto">
           <DialogHeader className="">
             <DialogTitle className="">
               {currentStep === 1 && "Select Location"}
@@ -566,17 +566,17 @@ export default function Hero() {
               {currentStep === 3 && "Number of Passengers"}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-6">
+          <div className="py-3 sm:py-6">
             {currentStep === 1 && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                 {countries.map((country) => (
                   <div
                     key={country.name}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                    className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200 text-center sm:text-left"
                     onClick={() => handleLocationSelect(country.name)}
                   >
-                    <span className="text-2xl">{country.flag}</span>
-                    <span className="text-sm font-medium">{country.name}</span>
+                    <span className="text-lg sm:text-2xl">{country.flag}</span>
+                    <span className="text-xs sm:text-sm font-medium truncate">{country.name}</span>
                   </div>
                 ))}
               </div>
