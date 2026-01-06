@@ -38,7 +38,7 @@ export async function GET(request, { params }) {
       )
     }
 
-    const { id } = params
+    const { id } = await params;
 
     // Fetch location with parent data
     const { data: location, error: fetchError } = await supabase
@@ -99,7 +99,7 @@ export async function PUT(request, { params }) {
       )
     }
 
-    const { id } = params
+    const { id } = await params;
     const body = await request.json()
     const { name, slug, type, parent_id, is_active } = body
 
@@ -284,7 +284,7 @@ export async function PATCH(request, { params }) {
       )
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { is_active } = body
 
