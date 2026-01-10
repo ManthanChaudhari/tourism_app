@@ -8,6 +8,7 @@ import {
   Package, 
   Users,
   MapPin,
+  Tag,
   Menu, 
   X,
   LogOut
@@ -23,6 +24,11 @@ const sidebarItems = [
     name: 'Packages',
     href: '/admin/packages',
     icon: Package
+  },
+  {
+    name: 'Categories',
+    href: '/admin/categories',
+    icon: Tag
   },
   {
     name: 'Users',

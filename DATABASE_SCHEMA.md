@@ -9,9 +9,8 @@ Main table for storing tour package information.
 CREATE TABLE packages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  destination VARCHAR(255), -- Legacy text field, used as fallback
-  destination_id UUID REFERENCES locations(id), -- New foreign key to locations table
-  category VARCHAR(50) NOT NULL,
+  destination TEXT, -- Can store location UUID or text
+  category TEXT, -- Can store category UUID or text  
   days INTEGER NOT NULL,
   nights INTEGER NOT NULL,
   price_per_person DECIMAL(10,2) NOT NULL,
@@ -30,16 +29,54 @@ CREATE TABLE packages (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add foreign key constraint
-ALTER TABLE packages 
-ADD CONSTRAINT packages_destination_fkey 
-FOREIGN KEY (destination_id) REFERENCES locations(id);
+-- Create indexes for better performance when the fields contain UUIDs
+CREATE INDEX idx_packages_destination_uuid ON packages(destination) 
+WHERE destination ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
 
--- Add index for the foreign key
-CREATE INDEX idx_packages_destination_id ON packages(destination_id);
+CREATE INDEX idx_packages_category_uuid ON packages(category) 
+WHERE category ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
 ```
 
-### 2. locations
+### 2. categories
+Category management table for package categories.
+
+```sql
+CREATE TABLE categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  icon TEXT, -- icon name or image url
+  banner_image TEXT, -- category banner
+  display_order INT DEFAULT 0,
+  is_featured BOOLEAN DEFAULT false,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_categories_status ON categories(status);
+CREATE INDEX idx_categories_display_order ON categories(display_order);
+CREATE INDEX idx_categories_slug ON categories(slug);
+CREATE INDEX idx_categories_featured ON categories(is_featured);
+CREATE INDEX idx_categories_status_featured ON categories(status, is_featured);
+
+-- Trigger to auto-update updated_at
+CREATE OR REPLACE FUNCTION update_categories_updated_at()
+RETURNS TRIGGER AS $
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_categories_updated_at
+  BEFORE UPDATE ON categories
+  FOR EACH ROW EXECUTE FUNCTION update_categories_updated_at();
+```
+
+### 3. locations
 Location management table for states and cities.
 
 ```sql
@@ -92,7 +129,7 @@ CREATE TRIGGER trigger_set_location_slug
   FOR EACH ROW EXECUTE FUNCTION set_location_slug();
 ```
 
-### 3. profiles (if not exists)
+### 4. profiles (if not exists)
 User profiles table to store user roles and additional information.
 
 ```sql
@@ -161,6 +198,46 @@ USING (bucket_id = 'package-images' AND auth.uid() IN (
 ```
 
 ## Row Level Security (RLS)
+
+### categories table policies
+
+```sql
+-- Enable RLS
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+
+-- Allow public to read active categories
+CREATE POLICY "Allow public read active categories" ON categories
+FOR SELECT TO public
+USING (status = 'active');
+
+-- Allow admins to read all categories
+CREATE POLICY "Allow admin read all categories" ON categories
+FOR SELECT TO authenticated
+USING (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Allow admins to insert categories
+CREATE POLICY "Allow admin insert categories" ON categories
+FOR INSERT TO authenticated
+WITH CHECK (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Allow admins to update categories
+CREATE POLICY "Allow admin update categories" ON categories
+FOR UPDATE TO authenticated
+USING (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+
+-- Allow admins to delete categories
+CREATE POLICY "Allow admin delete categories" ON categories
+FOR DELETE TO authenticated
+USING (auth.uid() IN (
+  SELECT id FROM profiles WHERE role = 'admin'
+));
+```
 
 ### locations table policies
 
@@ -298,6 +375,17 @@ CREATE INDEX idx_packages_admin ON packages(status, created_at DESC);
 INSERT INTO profiles (id, email, role) VALUES 
 ('your-admin-user-id', 'admin@example.com', 'admin');
 
+-- Sample categories data
+INSERT INTO categories (name, slug, description, icon, display_order, is_featured, status) VALUES 
+('Adventure', 'adventure', 'Thrilling outdoor experiences and adrenaline-pumping activities', '🏔️', 1, true, 'active'),
+('Honeymoon', 'honeymoon', 'Romantic getaways perfect for couples and newlyweds', '💕', 2, true, 'active'),
+('Family', 'family', 'Fun-filled vacations suitable for families with children', '👨‍👩‍👧‍👦', 3, true, 'active'),
+('Beach', 'beach', 'Relaxing coastal destinations with sun, sand, and sea', '🏖️', 4, false, 'active'),
+('Cultural', 'cultural', 'Immersive experiences exploring local traditions and heritage', '🏛️', 5, false, 'active'),
+('Luxury', 'luxury', 'Premium travel experiences with top-tier accommodations', '✨', 6, false, 'active'),
+('Budget', 'budget', 'Affordable travel options without compromising on experience', '💰', 7, false, 'active'),
+('Wildlife', 'wildlife', 'Safari adventures and wildlife observation tours', '🦁', 8, false, 'active');
+
 -- Sample package data
 INSERT INTO packages (
   title, destination, category, days, nights, price_per_person, 
@@ -338,6 +426,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (if needed for admin operations)
 5. Public users can only view published packages
 6. The discount field stores percentage values (0-100)
 7. Categories are stored as lowercase strings for consistency
-8. **Destination Handling**: The packages table supports both legacy text destinations (`destination` field) and new location references (`destination_id` field). When `destination_id` is set, it takes precedence over the text field. This allows for gradual migration and better data consistency.
-9. **Location Integration**: The admin forms now use a searchable dropdown that pulls from the locations table, storing the location ID in `destination_id` field.
-10. **Backward Compatibility**: Existing packages with text destinations will continue to work, while new packages will use location IDs for better data integrity.
+8. **Flexible Field Storage**: The `destination` and `category` fields can store either UUIDs (referencing locations/categories tables) or plain text for backward compatibility.
+9. **Smart API Resolution**: The APIs automatically detect if field values are UUIDs and fetch related data accordingly, falling back to displaying the raw text value.
+10. **Location Integration**: The admin forms use a searchable dropdown that pulls from the locations table, storing the location ID directly in the `destination` field.
+11. **Category Integration**: The admin forms use a searchable dropdown that pulls from the categories table, storing the category ID directly in the `category` field.
+12. **Backward Compatibility**: Existing packages with text destinations and categories continue to work seamlessly alongside new UUID-based entries.

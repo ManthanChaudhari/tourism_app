@@ -14,7 +14,7 @@ export async function POST(request) {
       )
     }
 
-    // Check if user is admin (you can customize this logic based on your user roles)
+    // Check if user is admin
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -33,7 +33,7 @@ export async function POST(request) {
     // Extract form fields
     const packageData = {
       title: formData.get('title'),
-      destination: formData.get('destination'), // This will now be a location ID or text
+      destination: formData.get('destination'),
       category: formData.get('category'),
       days: parseInt(formData.get('days')),
       nights: parseInt(formData.get('nights')),
@@ -49,17 +49,15 @@ export async function POST(request) {
       created_by: user.id
     }
 
-    // Handle destination field - check if it's a UUID (location ID) or text
+    // Store destination and category values directly (can be UUID or text)
     const destinationValue = formData.get('destination')
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(destinationValue)
+    const categoryValue = formData.get('category')
     
-    if (isUUID) {
-      // It's a location ID
-      packageData.destination = destinationValue
-    }
+    packageData.destination = destinationValue
+    packageData.category = categoryValue
 
     if (!packageData.title || !destinationValue || !packageData.days || 
-        !packageData.nights || !packageData.price_per_person || !packageData.category) {
+        !packageData.nights || !packageData.price_per_person || !categoryValue) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -73,7 +71,7 @@ export async function POST(request) {
     if (thumbnailImage && thumbnailImage.size > 0) {
       const thumbnailFileName = `packages/${Date.now()}-${thumbnailImage.name}`
       
-      const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+      const { error: thumbnailError } = await supabase.storage
         .from('package-images')
         .upload(thumbnailFileName, thumbnailImage, {
           cacheControl: '3600',
@@ -100,7 +98,7 @@ export async function POST(request) {
       if (image && image.size > 0) {
         const galleryFileName = `packages/gallery/${Date.now()}-${image.name}`
         
-        const { data: galleryData, error: galleryError } = await supabase.storage
+        const { error: galleryError } = await supabase.storage
           .from('package-images')
           .upload(galleryFileName, image, {
             cacheControl: '3600',
@@ -192,7 +190,7 @@ export async function GET(request) {
 
     // Validate pagination parameters
     const validatedPage = Math.max(1, page)
-    const validatedLimit = Math.min(Math.max(1, limit), publicAccess ? 50 : 100) // Lower limit for public access
+    const validatedLimit = Math.min(Math.max(1, limit), publicAccess ? 50 : 100)
     const offset = (validatedPage - 1) * validatedLimit
 
     // Validate sort parameters
@@ -200,7 +198,7 @@ export async function GET(request) {
     const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'created_at'
     const validatedSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'desc'
 
-    // Build the query with proper join syntax
+    // Build the query
     let query = supabase
       .from('packages')
       .select(publicAccess ? `
@@ -216,12 +214,8 @@ export async function GET(request) {
         thumbnail_image_url,
         gallery_image_urls,
         created_at,
-        updated_at,
-        destination_location:locations(id, name, slug, type, parent:parent_id(name))
-      ` : `
-        *,
-        destination_location:locations(id, name, slug, type, parent:parent_id(name))
-      `, { count: 'exact' })
+        updated_at
+      ` : `*`, { count: 'exact' })
 
     // For public access, only show published packages
     if (publicAccess) {
@@ -261,23 +255,69 @@ export async function GET(request) {
 
     // Format packages for public consumption if needed
     let formattedPackages = packages || []
+    
+    // Helper function to check if a string is a UUID
+    const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+    
+    // Fetch location and category data for UUIDs
+    const locationIds = [...new Set(packages.filter(pkg => isUUID(pkg.destination)).map(pkg => pkg.destination))]
+    const categoryIds = [...new Set(packages.filter(pkg => isUUID(pkg.category)).map(pkg => pkg.category))]
+    
+    let locationsMap = {}
+    let categoriesMap = {}
+    
+    if (locationIds.length > 0) {
+      const { data: locations } = await supabase
+        .from('locations')
+        .select('id, name, slug, type, parent:parent_id(name)')
+        .in('id', locationIds)
+      
+      if (locations) {
+        locationsMap = locations.reduce((acc, loc) => {
+          acc[loc.id] = loc
+          return acc
+        }, {})
+      }
+    }
+    
+    if (categoryIds.length > 0) {
+      const { data: categories } = await supabase
+        .from('categories')
+        .select('id, name, slug, icon, is_featured')
+        .in('id', categoryIds)
+      
+      if (categories) {
+        categoriesMap = categories.reduce((acc, cat) => {
+          acc[cat.id] = cat
+          return acc
+        }, {})
+      }
+    }
+
     if (publicAccess) {
       formattedPackages = packages.map(pkg => {
-        // Get destination name - prefer location data over text field
+        // Get destination name
         let destinationName = pkg.destination
-        if (pkg.destination_location) {
-          if (pkg.destination_location.type === 'city' && pkg.destination_location.parent) {
-            destinationName = `${pkg.destination_location.name}, ${pkg.destination_location.parent.name}`
+        if (isUUID(pkg.destination) && locationsMap[pkg.destination]) {
+          const location = locationsMap[pkg.destination]
+          if (location.type === 'city' && location.parent) {
+            destinationName = `${location.name}, ${location.parent.name}`
           } else {
-            destinationName = pkg.destination_location.name
+            destinationName = location.name
           }
+        }
+
+        // Get category name
+        let categoryName = pkg.category
+        if (isUUID(pkg.category) && categoriesMap[pkg.category]) {
+          categoryName = categoriesMap[pkg.category].name
         }
 
         return {
           id: pkg.id,
           title: pkg.title,
           destination: destinationName,
-          category: pkg.category,
+          category: categoryName,
           duration: `${pkg.days} days, ${pkg.nights} nights`,
           days: pkg.days,
           nights: pkg.nights,
@@ -293,20 +333,27 @@ export async function GET(request) {
         }
       })
     } else {
-      // For admin access, also format destination names
+      // For admin access, also format destination and category names
       formattedPackages = packages.map(pkg => {
         let destinationName = pkg.destination
-        if (pkg.destination_location) {
-          if (pkg.destination_location.type === 'city' && pkg.destination_location.parent) {
-            destinationName = `${pkg.destination_location.name}, ${pkg.destination_location.parent.name}`
+        if (isUUID(pkg.destination) && locationsMap[pkg.destination]) {
+          const location = locationsMap[pkg.destination]
+          if (location.type === 'city' && location.parent) {
+            destinationName = `${location.name}, ${location.parent.name}`
           } else {
-            destinationName = pkg.destination_location.name
+            destinationName = location.name
           }
+        }
+
+        let categoryName = pkg.category
+        if (isUUID(pkg.category) && categoriesMap[pkg.category]) {
+          categoryName = categoriesMap[pkg.category].name
         }
 
         return {
           ...pkg,
-          destination_name: destinationName
+          destination_name: destinationName,
+          category_name: categoryName
         }
       })
     }
