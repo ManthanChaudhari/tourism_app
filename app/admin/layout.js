@@ -9,6 +9,7 @@ import {
   Users,
   MapPin,
   Tag,
+  Building2,
   Menu, 
   X,
   LogOut
@@ -24,6 +25,11 @@ const sidebarItems = [
     name: 'Packages',
     href: '/admin/packages',
     icon: Package
+  },
+  {
+    name: 'Hotels',
+    href: '/admin/hotels',
+    icon: Building2
   },
   {
     name: 'Categories',

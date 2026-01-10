@@ -7,6 +7,7 @@ import WhyTravelWithUs from "@/components/WhyTravelWithUs";
 import AdvertisementBanner from "@/components/AdvertisementBanner";
 import Services from "@/components/Services";
 import Destinations from "@/components/Destinations";
+import PopularHotels from "@/components/PopularHotels";
 import Footer from "@/components/Footer";
 import AuthErrorHandler from "@/components/AuthErrorHandler";
 
@@ -20,6 +21,7 @@ export default function Home() {
       <Hero />
       {/* <Services /> */}
       <Destinations />
+      <PopularHotels />
       <AdvertisementBanner />
       <WhatWeHelp />
       <WhyTravelWithUs />
