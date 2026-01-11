@@ -8,6 +8,7 @@ import AdvertisementBanner from "@/components/AdvertisementBanner";
 import Services from "@/components/Services";
 import Destinations from "@/components/Destinations";
 import PopularHotels from "@/components/PopularHotels";
+import PopularCars from "@/components/PopularCars";
 import Footer from "@/components/Footer";
 import AuthErrorHandler from "@/components/AuthErrorHandler";
 
@@ -22,6 +23,7 @@ export default function Home() {
       {/* <Services /> */}
       <Destinations />
       <PopularHotels />
+      <PopularCars />
       <AdvertisementBanner />
       <WhatWeHelp />
       <WhyTravelWithUs />

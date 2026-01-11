@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, RefreshCw, AlertCircle, CheckCircle, Car, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import CarForm from '../../../components/admin/CarForm';
-import CarDetailsModal from '../../../components/admin/CarDetailsModal';
+import { useRouter, useSearchParams } from 'next/navigation';
 import CategoryDropdown from '../../../components/admin/CategoryDropdown';
 import DestinationDropdown from '../../../components/admin/DestinationDropdown';
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,13 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function CarsManagement() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingCar, setEditingCar] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [selectedCar, setSelectedCar] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterLocation, setFilterLocation] = useState('');
@@ -32,6 +29,17 @@ export default function CarsManagement() {
     hasNextPage: false,
     hasPrevPage: false
   });
+
+  // Check for success message from URL params
+  useEffect(() => {
+    const messageParam = searchParams.get('message');
+    if (messageParam) {
+      setMessage({ type: 'success', text: messageParam });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      // Clean up URL
+      router.replace('/admin/cars');
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     fetchCars();
@@ -121,31 +129,16 @@ export default function CarsManagement() {
   };
 
   const handleEdit = (car) => {
-    setEditingCar(car);
-    setShowForm(true);
+    router.push(`/admin/cars/${car.id}/edit`);
   };
 
   const handleView = (car) => {
-    setSelectedCar(car);
-    setShowDetails(true);
+    router.push(`/admin/cars/${car.id}`);
   };
 
   const handleFormClose = () => {
-    setShowForm(false);
-    setEditingCar(null);
+    // This function is no longer needed since we're using pages
     fetchCars();
-    if (!editingCar) {
-      setMessage({ 
-        type: 'success', 
-        text: 'Car created successfully' 
-      });
-    } else {
-      setMessage({ 
-        type: 'success', 
-        text: 'Car updated successfully' 
-      });
-    }
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
   const handleSearch = (e) => {
@@ -234,7 +227,7 @@ export default function CarsManagement() {
             Refresh
           </Button>
           <Button 
-            onClick={() => setShowForm(true)}
+            onClick={() => router.push('/admin/cars/new')}
             className="bg-orange-600 hover:bg-orange-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -398,7 +391,7 @@ export default function CarsManagement() {
                   Clear Filters
                 </Button>
               )}
-              <Button onClick={() => setShowForm(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
+              <Button onClick={() => router.push('/admin/cars/new')} className="bg-orange-600 hover:bg-orange-700 text-white">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Car
               </Button>
@@ -588,22 +581,6 @@ export default function CarsManagement() {
             </Button>
           </div>
         </div>
-      )}
-
-      {/* Car Form Modal */}
-      {showForm && (
-        <CarForm
-          car={editingCar}
-          onClose={handleFormClose}
-        />
-      )}
-
-      {/* Car Details Modal */}
-      {showDetails && selectedCar && (
-        <CarDetailsModal
-          car={selectedCar}
-          onClose={() => setShowDetails(false)}
-        />
       )}
     </div>
   );
