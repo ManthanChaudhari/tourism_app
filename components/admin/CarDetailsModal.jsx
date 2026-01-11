@@ -142,7 +142,7 @@ export default function CarDetailsModal({ car, onClose }) {
           </div>
 
           {/* Pricing */}
-          <div className="bg-blue-50 p-6 rounded-lg">
+          <div className="bg-orange-50 p-6 rounded-lg">
             <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <DollarSign size={20} className="mr-2" />
               Pricing Details
@@ -150,7 +150,7 @@ export default function CarDetailsModal({ car, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-white p-4 rounded-lg">
                 <p className="text-sm text-gray-600">Price per Day</p>
-                <p className="text-2xl font-bold text-blue-600">₹{car.price_per_day}</p>
+                <p className="text-2xl font-bold text-orange-600">₹{car.price_per_day}</p>
               </div>
 
               {car.price_per_hour && (
@@ -258,7 +258,7 @@ export default function CarDetailsModal({ car, onClose }) {
         <div className="flex justify-end p-6 border-t">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
           >
             Close
           </button>

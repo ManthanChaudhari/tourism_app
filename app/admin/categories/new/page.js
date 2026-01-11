@@ -141,7 +141,7 @@ export default function NewCategoryPage() {
             <button
               onClick={() => handleSubmit('active')}
               disabled={isSubmitting}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Eye className="h-5 w-5 mr-2 inline" />
               {isSubmitting ? 'Publishing...' : 'Save & Activate'}
@@ -167,7 +167,7 @@ export default function NewCategoryPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                   placeholder="e.g., Adventure, Honeymoon, Family"
                   required
                 />
@@ -182,7 +182,7 @@ export default function NewCategoryPage() {
                   type="text"
                   value={formData.slug}
                   onChange={(e) => handleInputChange('slug', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                   placeholder="adventure-packages"
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -199,7 +199,7 @@ export default function NewCategoryPage() {
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                   placeholder="Describe this category and what types of packages it includes..."
                 />
               </div>
@@ -214,7 +214,7 @@ export default function NewCategoryPage() {
                     type="text"
                     value={formData.icon}
                     onChange={(e) => handleInputChange('icon', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                     placeholder="🏔️ or https://example.com/icon.png"
                   />
                   <p className="text-xs text-gray-500 mt-2">
@@ -232,7 +232,7 @@ export default function NewCategoryPage() {
                     min="0"
                     value={formData.display_order}
                     onChange={(e) => handleInputChange('display_order', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-500 mt-2">
@@ -250,7 +250,7 @@ export default function NewCategoryPage() {
                   type="url"
                   value={formData.banner_image}
                   onChange={(e) => handleInputChange('banner_image', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                   placeholder="https://example.com/banner.jpg"
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -282,7 +282,7 @@ export default function NewCategoryPage() {
                 <button
                   onClick={() => handleInputChange('is_featured', !formData.is_featured)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.is_featured ? 'bg-blue-600' : 'bg-gray-200'
+                    formData.is_featured ? 'bg-orange-600' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -301,7 +301,7 @@ export default function NewCategoryPage() {
                 <select
                   value={formData.status}
                   onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                 >
                   {STATUS_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>

@@ -172,7 +172,7 @@ export default function CarForm({ car, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={24} />
           </button>
@@ -180,8 +180,10 @@ export default function CarForm({ car, onClose }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Car Name *
               </label>
@@ -190,7 +192,7 @@ export default function CarForm({ car, onClose }) {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="e.g., Swift Dzire"
@@ -288,9 +290,12 @@ export default function CarForm({ car, onClose }) {
               {errors.location_id && <p className="text-red-500 text-sm mt-1">{errors.location_id}</p>}
             </div>
           </div>
+          </div>
 
           {/* Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Seating Capacity *
@@ -367,9 +372,12 @@ export default function CarForm({ car, onClose }) {
               </label>
             </div>
           </div>
+          </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Price per Day (₹) *
@@ -477,6 +485,7 @@ export default function CarForm({ car, onClose }) {
                 placeholder="e.g., 1"
               />
             </div>
+          </div>
           </div>
 
           {/* Policies and Options */}
@@ -643,14 +652,14 @@ export default function CarForm({ car, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+              className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Saving...' : (car ? 'Update Car' : 'Add Car')}
             </button>

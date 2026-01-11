@@ -95,7 +95,7 @@ export default function CategoryViewPage() {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading category...</p>
         </div>
       </div>
@@ -371,7 +371,7 @@ export default function CategoryViewPage() {
               
               <Link
                 href={`/admin/packages?category=${category.name.toLowerCase()}`}
-                className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
               >
                 <Package className="h-4 w-4 mr-2" />
                 View Packages
