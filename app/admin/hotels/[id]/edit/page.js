@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { 
   Building2, 
   Save, 
@@ -15,19 +15,22 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-  Users,
-  DollarSign,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import DestinationDropdown from '@/components/admin/DestinationDropdown'
 
-export default function NewHotelPage() {
+export default function EditHotelPage() {
   const router = useRouter()
+  const params = useParams()
+  const hotelId = params.id
+  
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('basic')
   const [expandedRooms, setExpandedRooms] = useState({})
@@ -57,16 +60,8 @@ export default function NewHotelPage() {
   const [galleryPreviews, setGalleryPreviews] = useState([])
 
   // Room management
-  const [rooms, setRooms] = useState([
-    {
-      id: Date.now(),
-      room_name: '',
-      max_guests: 2,
-      price_per_night: '',
-      room_size: '',
-      bed_type: ''
-    }
-  ])
+  const [rooms, setRooms] = useState([])
+  const [roomsToDelete, setRoomsToDelete] = useState([])
 
   // Available amenities grouped
   const amenityGroups = {
@@ -90,6 +85,80 @@ export default function NewHotelPage() {
     { id: 'rooms', label: 'Rooms', icon: Bed },
     { id: 'policies', label: 'Policies', icon: FileText }
   ]
+
+  // Fetch hotel data on component mount
+  useEffect(() => {
+    const fetchHotelData = async () => {
+      try {
+        setInitialLoading(true)
+        const response = await fetch(`/api/admin/hotels/${hotelId}`)
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch hotel data')
+        }
+
+        const hotel = result.hotel
+        
+        // Set form data
+        setFormData({
+          name: hotel.name || '',
+          destination_id: hotel.destination_id || '',
+          address: hotel.address || '',
+          star_rating: hotel.star_rating || 3,
+          short_description: hotel.short_description || '',
+          check_in_time: hotel.check_in_time || '14:00',
+          check_out_time: hotel.check_out_time || '11:00',
+          contact_number: hotel.contact_number || '',
+          email: hotel.email || '',
+          thumbnail_image: hotel.thumbnail_image || '',
+          gallery_images: hotel.gallery_images || [],
+          amenities: hotel.amenities || [],
+          cancellation_policy: hotel.cancellation_policy || '',
+          house_rules: hotel.house_rules || ''
+        })
+
+        // Set rooms data
+        if (hotel.rooms && hotel.rooms.length > 0) {
+          const roomsWithClientId = hotel.rooms.map(room => ({
+            ...room,
+            clientId: room.id // Use database ID as client ID for existing rooms
+          }))
+          setRooms(roomsWithClientId)
+          
+          // Expand first room by default
+          const firstRoomExpanded = {}
+          if (roomsWithClientId.length > 0) {
+            firstRoomExpanded[roomsWithClientId[0].clientId] = true
+          }
+          setExpandedRooms(firstRoomExpanded)
+        } else {
+          // Add one empty room if no rooms exist
+          const newRoom = {
+            clientId: Date.now(),
+            room_name: '',
+            max_guests: 2,
+            price_per_night: '',
+            room_size: '',
+            bed_type: '',
+            isNew: true
+          }
+          setRooms([newRoom])
+          setExpandedRooms({ [newRoom.clientId]: true })
+        }
+
+      } catch (error) {
+        console.error('Fetch hotel error:', error)
+        setError(error.message || 'Failed to load hotel data')
+      } finally {
+        setInitialLoading(false)
+      }
+    }
+
+    if (hotelId) {
+      fetchHotelData()
+    }
+  }, [hotelId])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -183,9 +252,9 @@ export default function NewHotelPage() {
     setGalleryPreviews(prev => prev.filter((item, i) => item.isFile || i !== index))
   }
 
-  const handleRoomChange = (roomId, field, value) => {
+  const handleRoomChange = (roomClientId, field, value) => {
     setRooms(prev => prev.map(room => 
-      room.id === roomId 
+      room.clientId === roomClientId 
         ? { ...room, [field]: value }
         : room
     ))
@@ -193,32 +262,41 @@ export default function NewHotelPage() {
 
   const addRoom = () => {
     const newRoom = {
-      id: Date.now(),
+      clientId: Date.now(),
       room_name: '',
       max_guests: 2,
       price_per_night: '',
       room_size: '',
-      bed_type: ''
+      bed_type: '',
+      isNew: true
     }
     setRooms(prev => [...prev, newRoom])
-    setExpandedRooms(prev => ({ ...prev, [newRoom.id]: true }))
+    setExpandedRooms(prev => ({ ...prev, [newRoom.clientId]: true }))
   }
 
-  const removeRoom = (roomId) => {
+  const removeRoom = (roomClientId) => {
+    const room = rooms.find(r => r.clientId === roomClientId)
+    
     if (rooms.length > 1) {
-      setRooms(prev => prev.filter(room => room.id !== roomId))
+      // If it's an existing room (has database ID), mark for deletion
+      if (room && room.id && !room.isNew) {
+        setRoomsToDelete(prev => [...prev, room.id])
+      }
+      
+      // Remove from rooms array
+      setRooms(prev => prev.filter(room => room.clientId !== roomClientId))
       setExpandedRooms(prev => {
         const newExpanded = { ...prev }
-        delete newExpanded[roomId]
+        delete newExpanded[roomClientId]
         return newExpanded
       })
     }
   }
 
-  const toggleRoomExpansion = (roomId) => {
+  const toggleRoomExpansion = (roomClientId) => {
     setExpandedRooms(prev => ({
       ...prev,
-      [roomId]: !prev[roomId]
+      [roomClientId]: !prev[roomClientId]
     }))
   }
 
@@ -229,7 +307,6 @@ export default function NewHotelPage() {
     if (room.max_guests) parts.push(`${room.max_guests} guests`)
     return parts.length > 0 ? parts.join(' • ') : 'New Room'
   }
-
   const handleSubmit = async (status = 'draft') => {
     setError('')
     
@@ -266,68 +343,113 @@ export default function NewHotelPage() {
     setLoading(true)
 
     try {
-      // Prepare form data for file upload
-      const submitFormData = new FormData()
-      
-      // Add basic hotel data
-      Object.keys(formData).forEach(key => {
-        if (key === 'amenities') {
-          submitFormData.append(key, JSON.stringify(formData[key]))
-        } else if (key !== 'thumbnail_image' && key !== 'gallery_images') {
-          submitFormData.append(key, formData[key] || '')
+      // Check if we have files to upload
+      const hasFiles = thumbnailFile || galleryFiles.length > 0
+
+      let hotelResponse
+      if (hasFiles) {
+        // Use FormData for file upload
+        const submitFormData = new FormData()
+        
+        // Add basic hotel data
+        Object.keys(formData).forEach(key => {
+          if (key === 'amenities') {
+            submitFormData.append(key, JSON.stringify(formData[key]))
+          } else if (key !== 'thumbnail_image' && key !== 'gallery_images') {
+            submitFormData.append(key, formData[key] || '')
+          }
+        })
+        
+        submitFormData.append('status', status)
+        submitFormData.append('star_rating', formData.star_rating.toString())
+
+        // Add thumbnail file or indicate to keep existing
+        if (thumbnailFile) {
+          submitFormData.append('thumbnailImage', thumbnailFile)
+        } else if (formData.thumbnail_image) {
+          submitFormData.append('thumbnail_image', formData.thumbnail_image)
+        } else {
+          submitFormData.append('keepExistingThumbnail', 'true')
         }
-      })
-      
-      submitFormData.append('status', status)
-      submitFormData.append('star_rating', formData.star_rating.toString())
 
-      // Add thumbnail file or URL
-      if (thumbnailFile) {
-        submitFormData.append('thumbnailImage', thumbnailFile)
-      } else if (formData.thumbnail_image) {
-        submitFormData.append('thumbnail_image', formData.thumbnail_image)
-      }
+        // Add gallery files
+        galleryFiles.forEach(file => {
+          submitFormData.append('galleryImages', file)
+        })
 
-      // Add gallery files
-      galleryFiles.forEach(file => {
-        submitFormData.append('galleryImages', file)
-      })
+        // Add gallery URLs if any
+        if (formData.gallery_images.length > 0) {
+          submitFormData.append('gallery_images', JSON.stringify(formData.gallery_images))
+        } else if (galleryFiles.length === 0) {
+          submitFormData.append('keepExistingGallery', 'true')
+        }
 
-      // Add gallery URLs if any
-      if (formData.gallery_images.length > 0) {
-        submitFormData.append('gallery_images', JSON.stringify(formData.gallery_images))
-      }
-
-      // Create hotel
-      const hotelResponse = await fetch('/api/admin/hotels', {
-        method: 'POST',
-        body: submitFormData // Don't set Content-Type header, let browser set it
-      })
-
-      const hotelResult = await hotelResponse.json()
-
-      if (!hotelResponse.ok) {
-        throw new Error(hotelResult.error || 'Failed to create hotel')
-      }
-
-      // Create rooms
-      const hotelId = hotelResult.hotel.id
-      const roomPromises = validRooms.map(room => 
-        fetch('/api/admin/hotel-rooms', {
-          method: 'POST',
+        hotelResponse = await fetch(`/api/admin/hotels/${hotelId}`, {
+          method: 'PUT',
+          body: submitFormData
+        })
+      } else {
+        // Use JSON for regular update
+        hotelResponse = await fetch(`/api/admin/hotels/${hotelId}`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            hotel_id: hotelId,
-            room_name: room.room_name.trim(),
-            max_guests: parseInt(room.max_guests),
-            price_per_night: parseFloat(room.price_per_night),
-            room_size: room.room_size.trim() || null,
-            bed_type: room.bed_type || null
+            ...formData,
+            status: status,
+            star_rating: parseInt(formData.star_rating)
           })
         })
-      )
+      }
+
+      const hotelResult = await hotelResponse.json()
+
+      if (!hotelResponse.ok) {
+        throw new Error(hotelResult.error || 'Failed to update hotel')
+      }
+
+      // Handle room deletions
+      if (roomsToDelete.length > 0) {
+        const deletePromises = roomsToDelete.map(roomId => 
+          fetch(`/api/admin/hotel-rooms/${roomId}`, {
+            method: 'DELETE'
+          })
+        )
+        await Promise.all(deletePromises)
+      }
+
+      // Handle room updates and creations
+      const roomPromises = validRooms.map(room => {
+        const roomData = {
+          hotel_id: hotelId,
+          room_name: room.room_name.trim(),
+          max_guests: parseInt(room.max_guests),
+          price_per_night: parseFloat(room.price_per_night),
+          room_size: room.room_size.trim() || null,
+          bed_type: room.bed_type || null
+        }
+
+        if (room.isNew || !room.id) {
+          // Create new room
+          return fetch('/api/admin/hotel-rooms', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(roomData)
+          })
+        } else {
+          // Update existing room
+          return fetch(`/api/admin/hotel-rooms/${room.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(roomData)
+          })
+        }
+      })
 
       await Promise.all(roomPromises)
 
@@ -335,8 +457,8 @@ export default function NewHotelPage() {
       router.push('/admin/hotels')
       
     } catch (error) {
-      console.error('Create hotel error:', error)
-      setError(error.message || 'Failed to create hotel. Please try again.')
+      console.error('Update hotel error:', error)
+      setError(error.message || 'Failed to update hotel. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -720,14 +842,13 @@ export default function NewHotelPage() {
       )}
     </div>
   )
-
   const renderRooms = () => (
     <div className="space-y-4">
       {rooms.map((room, index) => (
-        <Card key={room.id} className="overflow-hidden">
+        <Card key={room.clientId} className="overflow-hidden">
           <div
             className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => toggleRoomExpansion(room.id)}
+            onClick={() => toggleRoomExpansion(room.clientId)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -737,6 +858,7 @@ export default function NewHotelPage() {
                 <div>
                   <h3 className="font-medium text-gray-900">
                     Room {index + 1}
+                    {room.isNew && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">New</span>}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {getRoomSummary(room)}
@@ -751,14 +873,14 @@ export default function NewHotelPage() {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      removeRoom(room.id)
+                      removeRoom(room.clientId)
                     }}
                     className="text-red-600 hover:text-red-700 h-8 px-2"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
-                {expandedRooms[room.id] ? (
+                {expandedRooms[room.clientId] ? (
                   <ChevronUp className="h-4 w-4 text-gray-400" />
                 ) : (
                   <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -767,7 +889,7 @@ export default function NewHotelPage() {
             </div>
           </div>
 
-          {expandedRooms[room.id] && (
+          {expandedRooms[room.clientId] && (
             <div className="px-4 pb-4 border-t bg-gray-50">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div>
@@ -777,7 +899,7 @@ export default function NewHotelPage() {
                   <Input
                     type="text"
                     value={room.room_name}
-                    onChange={(e) => handleRoomChange(room.id, 'room_name', e.target.value)}
+                    onChange={(e) => handleRoomChange(room.clientId, 'room_name', e.target.value)}
                     placeholder="e.g., Deluxe Room"
                     className="h-8"
                     required
@@ -793,7 +915,7 @@ export default function NewHotelPage() {
                     min="1"
                     max="10"
                     value={room.max_guests}
-                    onChange={(e) => handleRoomChange(room.id, 'max_guests', e.target.value)}
+                    onChange={(e) => handleRoomChange(room.clientId, 'max_guests', e.target.value)}
                     className="h-8"
                     required
                   />
@@ -810,7 +932,7 @@ export default function NewHotelPage() {
                       min="0"
                       step="0.01"
                       value={room.price_per_night}
-                      onChange={(e) => handleRoomChange(room.id, 'price_per_night', e.target.value)}
+                      onChange={(e) => handleRoomChange(room.clientId, 'price_per_night', e.target.value)}
                       placeholder="0.00"
                       className="h-8 pl-6"
                       required
@@ -825,7 +947,7 @@ export default function NewHotelPage() {
                   <Input
                     type="text"
                     value={room.room_size}
-                    onChange={(e) => handleRoomChange(room.id, 'room_size', e.target.value)}
+                    onChange={(e) => handleRoomChange(room.clientId, 'room_size', e.target.value)}
                     placeholder="e.g., 25 sqm"
                     className="h-8"
                   />
@@ -837,7 +959,7 @@ export default function NewHotelPage() {
                   </label>
                   <select
                     value={room.bed_type}
-                    onChange={(e) => handleRoomChange(room.id, 'bed_type', e.target.value)}
+                    onChange={(e) => handleRoomChange(room.clientId, 'bed_type', e.target.value)}
                     className="w-full h-8 border border-gray-300 rounded-md px-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   >
                     <option value="">Select bed type</option>
@@ -917,6 +1039,17 @@ export default function NewHotelPage() {
     }
   }
 
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading hotel data...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -929,8 +1062,8 @@ export default function NewHotelPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Add New Hotel</h1>
-            <p className="text-gray-600 mt-0.5">Create a new hotel with rooms and amenities</p>
+            <h1 className="text-2xl font-bold text-gray-900">Edit Hotel</h1>
+            <p className="text-gray-600 mt-0.5">Update hotel information, rooms and amenities</p>
           </div>
         </div>
       </div>
