@@ -66,12 +66,8 @@ export async function GET(request, { params }) {
         pickup_location,
         drop_location,
         created_at,
-        updated_at,
-        destination_location:locations(id, name, slug, type, parent:parent_id(name))
-      ` : `
-        *,
-        destination_location:locations(id, name, slug, type, parent:parent_id(name))
-      `)
+        updated_at
+      ` : `*`)
       .eq('id', packageId)
 
     // For public access, only show published packages
@@ -99,22 +95,48 @@ export async function GET(request, { params }) {
 
     // Format package for public consumption if needed
     let formattedPackage = packageData
-    if (publicAccess) {
-      // Get destination name - prefer location data over text field
-      let destinationName = packageData.destination
-      if (packageData.destination_location) {
-        if (packageData.destination_location.type === 'city' && packageData.destination_location.parent) {
-          destinationName = `${packageData.destination_location.name}, ${packageData.destination_location.parent.name}`
+    
+    // Helper function to check if a string is a UUID
+    const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+    
+    // Fetch location and category data if UUIDs
+    let destinationName = packageData.destination
+    let categoryName = packageData.category
+    
+    if (isUUID(packageData.destination)) {
+      const { data: location } = await supabase
+        .from('locations')
+        .select('id, name, slug, type, parent:parent_id(name)')
+        .eq('id', packageData.destination)
+        .single()
+      
+      if (location) {
+        if (location.type === 'city' && location.parent) {
+          destinationName = `${location.name}, ${location.parent.name}`
         } else {
-          destinationName = packageData.destination_location.name
+          destinationName = location.name
         }
       }
+    }
+    
+    if (isUUID(packageData.category)) {
+      const { data: category } = await supabase
+        .from('categories')
+        .select('id, name, slug, icon, is_featured')
+        .eq('id', packageData.category)
+        .single()
+      
+      if (category) {
+        categoryName = category.name
+      }
+    }
 
+    if (publicAccess) {
       formattedPackage = {
         id: packageData.id,
         title: packageData.title,
         destination: destinationName,
-        category: packageData.category,
+        category: categoryName,
         duration: `${packageData.days} days, ${packageData.nights} nights`,
         days: packageData.days,
         nights: packageData.nights,
@@ -136,19 +158,11 @@ export async function GET(request, { params }) {
         updatedAt: packageData.updated_at
       }
     } else {
-      // For admin access, also format destination names
-      let destinationName = packageData.destination
-      if (packageData.destination_location) {
-        if (packageData.destination_location.type === 'city' && packageData.destination_location.parent) {
-          destinationName = `${packageData.destination_location.name}, ${packageData.destination_location.parent.name}`
-        } else {
-          destinationName = packageData.destination_location.name
-        }
-      }
-
+      // For admin access, also format destination and category names
       formattedPackage = {
         ...packageData,
-        destination_name: destinationName
+        destination_name: destinationName,
+        category_name: categoryName
       }
     }
 
@@ -245,16 +259,15 @@ export async function PUT(request, { params }) {
       updated_at: new Date().toISOString()
     }
 
-    // Handle destination field - check if it's a UUID (location ID) or text
+    // Store destination and category values directly (can be UUID or text)
     const destinationValue = formData.get('destination')
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(destinationValue)
+    const categoryValue = formData.get('category')
     
-    if (isUUID) {
-      packageData.destination = destinationValue
-    }
+    packageData.destination = destinationValue
+    packageData.category = categoryValue
 
     if (!packageData.title || !destinationValue || !packageData.days || 
-        !packageData.nights || !packageData.price_per_person || !packageData.category) {
+        !packageData.nights || !packageData.price_per_person || !categoryValue) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }

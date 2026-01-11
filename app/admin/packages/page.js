@@ -413,7 +413,7 @@ export default function PackagesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formattedPkg.destination || 'N/A'}
+                      {formattedPkg.destination_name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ${formattedPkg.price?.toLocaleString() || 'N/A'}

@@ -20,19 +20,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import DestinationDropdown from '@/components/admin/DestinationDropdown'
-
-const PACKAGE_CATEGORIES = [
-  'Adventure',
-  'Honeymoon',
-  'Family',
-  'Religious',
-  'Luxury',
-  'Budget',
-  'Cultural',
-  'Beach',
-  'Mountain',
-  'Wildlife'
-]
+import CategoryDropdown from '@/components/admin/CategoryDropdown'
 
 const PACKAGE_STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft', color: 'gray' },
@@ -78,7 +66,7 @@ export default function EditPackagePage() {
         setFormData({
           title: data.title || '',
           destination: data.destination || '', // Use location ID if available, fallback to text
-          category: data.category || '',
+          category: data.category || '', // Use the category field directly
           days: data.days?.toString() || '',
           nights: data.nights?.toString() || '',
           pricePerPerson: data.price_per_person?.toString() || '',
@@ -370,19 +358,12 @@ export default function EditPackagePage() {
                     <Tag className="h-4 w-4 inline mr-2" />
                     Category / Package Type *
                   </label>
-                  <select
+                  <CategoryDropdown
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    onChange={(value) => handleInputChange('category', value)}
+                    placeholder="Select category..."
                     required
-                  >
-                    <option value="">Select category</option>
-                    {PACKAGE_CATEGORIES.map(category => (
-                      <option key={category} value={category.toLowerCase()}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 

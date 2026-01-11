@@ -271,7 +271,7 @@ export default function PackageDetailPage() {
             <MapPin className="h-10 w-10 text-orange-600 bg-orange-100 rounded-xl p-2" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Destination</p>
-              <p className="text-lg font-bold text-gray-900">{formattedPackage.destination}</p>
+              <p className="text-lg font-bold text-gray-900">{formattedPackage.destination_location?.name}</p>
             </div>
           </div>
         </div>
