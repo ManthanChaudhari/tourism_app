@@ -35,6 +35,7 @@ export default function EditPackagePage() {
   const [submitError, setSubmitError] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     destination: '',
     category: '',
     days: '',
@@ -65,6 +66,7 @@ export default function EditPackagePage() {
         const data = result.package
         setFormData({
           title: data.title || '',
+          slug: data.slug || '',
           destination: data.destination || '', // Use location ID if available, fallback to text
           category: data.category || '', // Use the category field directly
           days: data.days?.toString() || '',
@@ -100,6 +102,21 @@ export default function EditPackagePage() {
       ...prev,
       [field]: value
     }))
+    
+    // Auto-generate slug from title if slug is empty
+    if (field === 'title' && !formData.slug) {
+      const autoSlug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      setFormData(prev => ({
+        ...prev,
+        title: value,
+        slug: autoSlug
+      }));
+    }
   }
 
   const handleFileChange = (field, files) => {
@@ -198,6 +215,9 @@ export default function EditPackagePage() {
       
       // Add basic fields
       submitFormData.append('title', formData.title)
+      if (formData.slug) {
+        submitFormData.append('slug', formData.slug)
+      }
       submitFormData.append('destination', formData.destination)
       submitFormData.append('category', formData.category)
       submitFormData.append('days', formData.days)
@@ -337,6 +357,22 @@ export default function EditPackagePage() {
                   placeholder="Enter package title"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  URL Slug
+                </label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="package-url-slug"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  URL-friendly version of the package title. Leave empty to auto-generate.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

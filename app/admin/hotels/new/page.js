@@ -35,6 +35,7 @@ export default function NewHotelPage() {
   // Form data
   const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     destination_id: '',
     address: '',
     star_rating: 3,
@@ -96,6 +97,21 @@ export default function NewHotelPage() {
       ...prev,
       [field]: value
     }))
+    
+    // Auto-generate slug from name if slug is empty
+    if (field === 'name' && !formData.slug) {
+      const autoSlug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      setFormData(prev => ({
+        ...prev,
+        name: value,
+        slug: autoSlug
+      }));
+    }
   }
 
   const handleThumbnailFileChange = (e) => {
@@ -359,6 +375,22 @@ export default function NewHotelPage() {
               className="h-9"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              URL Slug
+            </label>
+            <Input
+              type="text"
+              value={formData.slug}
+              onChange={(e) => handleInputChange('slug', e.target.value)}
+              placeholder="hotel-url-slug"
+              className="h-9"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              URL-friendly version of the hotel name. Leave empty to auto-generate.
+            </p>
           </div>
           
           <div>
