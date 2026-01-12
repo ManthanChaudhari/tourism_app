@@ -150,7 +150,6 @@ export async function PUT(request, { params }) {
       description, 
       icon, 
       banner_image, 
-      display_order, 
       is_featured, 
       status 
     } = body
@@ -197,7 +196,6 @@ export async function PUT(request, { params }) {
       description: description?.trim() || null,
       icon: icon?.trim() || null,
       banner_image: banner_image?.trim() || null,
-      display_order: display_order !== undefined ? parseInt(display_order) || 0 : undefined,
       is_featured: is_featured !== undefined ? Boolean(is_featured) : undefined,
       status: status || undefined,
       updated_at: new Date().toISOString()

@@ -13,8 +13,7 @@ import {
   Image as ImageIcon,
   Star,
   ToggleLeft,
-  ToggleRight,
-  ArrowUpDown
+  ToggleRight
 } from 'lucide-react'
 
 const STATUS_OPTIONS = [
@@ -30,7 +29,6 @@ export default function NewCategoryPage() {
     description: '',
     icon: '',
     banner_image: '',
-    display_order: 0,
     is_featured: false,
     status: 'active'
   })
@@ -77,7 +75,6 @@ export default function NewCategoryPage() {
         description: formData.description.trim() || undefined,
         icon: formData.icon.trim() || undefined,
         banner_image: formData.banner_image.trim() || undefined,
-        display_order: parseInt(formData.display_order) || 0,
         status: status || formData.status
       }
 
@@ -204,41 +201,21 @@ export default function NewCategoryPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    <ImageIcon className="h-4 w-4 inline mr-2" />
-                    Icon
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) => handleInputChange('icon', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                    placeholder="🏔️ or https://example.com/icon.png"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Emoji or image URL for the category icon.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    <ArrowUpDown className="h-4 w-4 inline mr-2" />
-                    Display Order
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.display_order}
-                    onChange={(e) => handleInputChange('display_order', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                    placeholder="0"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Lower numbers appear first in listings.
-                  </p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <ImageIcon className="h-4 w-4 inline mr-2" />
+                  Icon
+                </label>
+                <input
+                  type="text"
+                  value={formData.icon}
+                  onChange={(e) => handleInputChange('icon', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                  placeholder="🏔️ or https://example.com/icon.png"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Emoji or image URL for the category icon.
+                </p>
               </div>
 
               <div>
