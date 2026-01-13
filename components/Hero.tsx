@@ -4,17 +4,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { AnimatedCar } from "./animated-car"
 import { AnimatedRoute } from "./animated-route"
+import CompactLocationDialog from "./compact-location-dialog"
 
 export default function Hero() {
   const [selectedLocation, setSelectedLocation] = useState("")
+  const [selectedLocationObj, setSelectedLocationObj] = useState(null)
   const [selectedDate, setSelectedDate] = useState("")
   const [adults, setAdults] = useState(1)
   const [children, setChildren] = useState(0)
   const [currentStep, setCurrentStep] = useState(1)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
   const [focusedField, setFocusedField] = useState<number | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
@@ -39,29 +42,6 @@ export default function Hero() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
-
-  const countries = [
-    { name: "Brazil", flag: "🇧🇷" },
-    { name: "United States", flag: "🇺🇸" },
-    { name: "Turkey", flag: "🇹🇷" },
-    { name: "Egypt", flag: "🇪🇬" },
-    { name: "United Kingdom", flag: "🇬🇧" },
-    { name: "Canada", flag: "🇨🇦" },
-    { name: "Ireland", flag: "🇮🇪" },
-    { name: "Finland", flag: "🇫🇮" },
-    { name: "Italy", flag: "🇮🇹" },
-    { name: "France", flag: "🇫🇷" },
-    { name: "Russia", flag: "🇷🇺" },
-    { name: "Israel", flag: "🇮🇱" },
-    { name: "Germany", flag: "🇩🇪" },
-    { name: "South Korea", flag: "🇰🇷" },
-    { name: "Swaziland", flag: "🇸🇿" },
-    { name: "Bahrain", flag: "🇧🇭" },
-    { name: "Argentina", flag: "🇦🇷" },
-    { name: "Australia", flag: "🇦🇺" },
-    { name: "China", flag: "🇨🇳" },
-    { name: "Saudi Arabia", flag: "🇸🇦" },
-  ]
 
   const getMonthName = (month: number) => {
     const monthNames = [
@@ -128,7 +108,24 @@ export default function Hero() {
     return days
   }
 
-  const handleLocationSelect = (country: string) => {
+  const getLocationDisplayName = (location) => {
+    if (!location) return '';
+    if (location.type === 'city' && location.parent) {
+      return `${location.name}, ${location.parent.name}`;
+    }
+    return location.name;
+  };
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocationObj(location);
+    setSelectedLocation(getLocationDisplayName(location));
+    setIsLocationDialogOpen(false);
+    // Automatically open the date dialog (step 2) after location selection
+    setCurrentStep(2);
+    setIsDialogOpen(true);
+  };
+
+  const handleCountrySelect = (country: string) => {
     setSelectedLocation(country)
     setCurrentStep(2)
   }
@@ -146,9 +143,13 @@ export default function Hero() {
   }
 
   const openDialog = (step: number) => {
-    setCurrentStep(step)
-    setIsDialogOpen(true)
-  }
+    if (step === 1) {
+      setIsLocationDialogOpen(true);
+    } else {
+      setCurrentStep(step);
+      setIsDialogOpen(true);
+    }
+  };
 
   return (
     <div className="relative bg-linear-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
@@ -561,26 +562,11 @@ export default function Hero() {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader className="">
             <DialogTitle className="">
-              {currentStep === 1 && "Select Location"}
               {currentStep === 2 && "Select Date"}
               {currentStep === 3 && "Number of Passengers"}
             </DialogTitle>
           </DialogHeader>
           <div className="py-6">
-            {currentStep === 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {countries.map((country) => (
-                  <div
-                    key={country.name}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                    onClick={() => handleLocationSelect(country.name)}
-                  >
-                    <span className="text-2xl">{country.flag}</span>
-                    <span className="text-sm font-medium">{country.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
             {currentStep === 2 && (
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -680,6 +666,14 @@ export default function Hero() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <CompactLocationDialog
+        isOpen={isLocationDialogOpen}
+        onClose={() => setIsLocationDialogOpen(false)}
+        onSelect={handleLocationSelect}
+        selectedLocation={selectedLocationObj}
+        title="Select Location"
+      />
     </div>
   )
 }
