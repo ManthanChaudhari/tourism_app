@@ -96,6 +96,7 @@ export async function PUT(request, { params }) {
       
       hotelData = {
         name: formData.get('name'),
+        slug: formData.get('slug'),
         destination_id: formData.get('destination_id'),
         address: formData.get('address'),
         star_rating: parseInt(formData.get('star_rating')) || 3,
@@ -282,6 +283,7 @@ export async function PUT(request, { params }) {
     // Clean up data for update
     const updateData = {
       name: hotelData.name.trim(),
+      slug : hotelData.slug.trim(),
       destination_id: hotelData.destination_id,
       address: hotelData.address.trim(),
       star_rating: hotelData.star_rating,

@@ -25,6 +25,7 @@ export async function GET(request) {
       .select(`
         id,
         name,
+        slug,
         address,
         star_rating,
         short_description,
@@ -95,6 +96,7 @@ export async function GET(request) {
       return {
         id: hotel.id,
         name: hotel.name,
+        slug: hotel.slug,
         location: hotel.destination?.name || 'Location not specified',
         address: hotel.address,
         rating: hotel.star_rating || 0,

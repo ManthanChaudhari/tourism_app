@@ -242,6 +242,7 @@ export async function GET(request) {
       .from('packages')
       .select(publicAccess ? `
         id,
+        slug,
         title,
         destination,
         category,
@@ -354,6 +355,7 @@ export async function GET(request) {
 
         return {
           id: pkg.id,
+          slug : pkg.slug,
           title: pkg.title,
           destination: destinationName,
           category: categoryName,
