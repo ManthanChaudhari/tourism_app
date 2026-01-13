@@ -13,7 +13,8 @@ import {
   Car,
   Menu, 
   X,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react'
 
 const sidebarItems = [
@@ -51,6 +52,11 @@ const sidebarItems = [
     name: 'Destinations',
     href: '/admin/locations',
     icon: MapPin
+  },
+  {
+    name: 'Settings',
+    href: '/admin/settings',
+    icon: Settings
   }
 ]
 

@@ -3,15 +3,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Home, Info, MapPin, LogOut } from "lucide-react";
+import { Home, Info, MapPin, LogOut, Car, Building2 } from "lucide-react";
 import { useUser, useSupabase } from "@/lib/supabase/hooks";
 import { authAPI } from "@/lib/auth";
+import { useSettings } from "@/lib/hooks/useSettings";
 
 export default function Header() {
   const router = useRouter();
   const { user, loading } = useUser();
   const supabase = useSupabase();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { settings, loading: settingsLoading } = useSettings();
 
   const handleLogout = async () => {
     try {
@@ -55,14 +57,40 @@ export default function Header() {
               About
               <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
             </a>
-            <a 
-              href="/packages" 
-              className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
-            >
-              <MapPin size={18} />
-              Packages
-              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
-            </a>
+            
+            {/* Conditionally show navigation items based on settings */}
+            {!settingsLoading && settings.packages_visible && (
+              <a 
+                href="/packages" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+              >
+                <MapPin size={18} />
+                Packages
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+              </a>
+            )}
+            
+            {!settingsLoading && settings.hotels_visible && (
+              <a 
+                href="/hotels" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+              >
+                <Building2 size={18} />
+                Hotels
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+              </a>
+            )}
+            
+            {!settingsLoading && settings.cars_visible && (
+              <a 
+                href="/cars" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+              >
+                <Car size={18} />
+                Cars
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+              </a>
+            )}
           </nav>
 
           {/* Desktop Auth Buttons - Visible on larger screens */}
@@ -159,14 +187,40 @@ export default function Header() {
                       <Info size={18} />
                       <span className="text-base">About</span>
                     </a>
-                    <a 
-                      href="#" 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
-                    >
-                      <MapPin size={18} />
-                      <span className="text-base">Destination</span>
-                    </a>
+                    
+                    {/* Conditionally show mobile navigation items based on settings */}
+                    {!settingsLoading && settings.packages_visible && (
+                      <a 
+                        href="/packages" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+                      >
+                        <MapPin size={18} />
+                        <span className="text-base">Packages</span>
+                      </a>
+                    )}
+                    
+                    {!settingsLoading && settings.hotels_visible && (
+                      <a 
+                        href="/hotels" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+                      >
+                        <Building2 size={18} />
+                        <span className="text-base">Hotels</span>
+                      </a>
+                    )}
+                    
+                    {!settingsLoading && settings.cars_visible && (
+                      <a 
+                        href="/cars" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+                      >
+                        <Car size={18} />
+                        <span className="text-base">Cars</span>
+                      </a>
+                    )}
                   </div>
 
                   {/* Account Section */}
