@@ -171,7 +171,7 @@ export default function Destinations() {
           <div className="overflow-x-auto scrollbar-hide">
             <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
               {getPackagesForDisplay().map((destination) => (
-                <Link key={destination.id} href={`/packages/${destination.id}`}>
+                <Link key={destination.id} href={`/packages/${destination.slug || destination.id}`}>
                   <Card className="group overflow-hidden flex-shrink-0 w-72 h-96 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                     <CardContent className="p-0 relative h-full flex flex-col">
                       <div className="relative h-48 overflow-hidden flex-shrink-0">

@@ -1,6 +1,39 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, packageId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingPackage } = await supabase
+      .from('packages')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', packageId || '')
+      .single();
+    
+    if (!existingPackage) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 export async function GET(request, { params }) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -257,6 +290,18 @@ export async function PUT(request, { params }) {
       exclusions: JSON.parse(formData.get('exclusions') || '[]'),
       itinerary: JSON.parse(formData.get('itinerary') || '[]'),
       updated_at: new Date().toISOString()
+    }
+
+    // Handle slug generation
+    const slugInput = formData.get('slug');
+    if (slugInput && slugInput.trim()) {
+      // User provided a slug, ensure it's unique
+      const baseSlug = generateSlug(slugInput.trim());
+      packageData.slug = await ensureUniqueSlug(supabase, baseSlug, packageId);
+    } else if (packageData.title && packageData.title.trim()) {
+      // Auto-generate slug from title
+      const baseSlug = generateSlug(packageData.title.trim());
+      packageData.slug = await ensureUniqueSlug(supabase, baseSlug, packageId);
     }
 
     // Store destination and category values directly (can be UUID or text)

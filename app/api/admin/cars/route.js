@@ -1,6 +1,39 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, carId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingCar } = await supabase
+      .from('cars')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', carId || '')
+      .single();
+    
+    if (!existingCar) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 
 export async function GET() {
   try {
@@ -43,9 +76,14 @@ export async function POST(request) {
       );
     }
 
+    // Generate slug if not provided
+    const baseSlug = body.slug && body.slug.trim() ? body.slug.trim() : generateSlug(body.name);
+    const finalSlug = await ensureUniqueSlug(supabase, baseSlug);
+
     // Prepare car data
     const carData = {
       name: body.name.trim(),
+      slug: finalSlug,
       brand: body.brand.trim(),
       model: body.model.trim(),
       year: parseInt(body.year),

@@ -1,6 +1,39 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, hotelId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingHotel } = await supabase
+      .from('hotels')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', hotelId || '')
+      .single();
+    
+    if (!existingHotel) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 
 export async function GET(request) {
   try {
@@ -119,6 +152,12 @@ export async function POST(request) {
         house_rules: formData.get('house_rules')
       }
 
+      // Generate slug if not provided
+      const slugInput = formData.get('slug');
+      const baseSlug = slugInput && slugInput.trim() ? slugInput.trim() : generateSlug(hotelData.name);
+      const finalSlug = await ensureUniqueSlug(supabase, baseSlug);
+      hotelData.slug = finalSlug;
+
       // Handle thumbnail image upload
       const thumbnailImage = formData.get('thumbnailImage')
       if (thumbnailImage && thumbnailImage.size > 0) {
@@ -234,7 +273,8 @@ export async function POST(request) {
         gallery_images,
         amenities,
         cancellation_policy,
-        house_rules
+        house_rules,
+        slug
       } = body
 
       hotelData = {
@@ -254,6 +294,11 @@ export async function POST(request) {
         cancellation_policy,
         house_rules
       }
+
+      // Generate slug if not provided
+      const baseSlug = slug && slug.trim() ? slug.trim() : generateSlug(name);
+      const finalSlug = await ensureUniqueSlug(supabase, baseSlug);
+      hotelData.slug = finalSlug;
     }
 
     // Validation

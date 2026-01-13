@@ -31,19 +31,19 @@ import { Button } from "@/components/ui/button"
 export default function HotelDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const hotelId = params.id
+  const hotelSlug = params.slug
   
   const [hotel, setHotel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
-  // Fetch hotel details
+  // Fetch hotel details by slug
   useEffect(() => {
     const fetchHotel = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/hotels/${hotelId}`)
+        const response = await fetch(`/api/hotels/slug/${hotelSlug}?public=true`)
         const data = await response.json()
         
         if (data.success) {
@@ -59,10 +59,10 @@ export default function HotelDetailPage() {
       }
     }
 
-    if (hotelId) {
+    if (hotelSlug) {
       fetchHotel()
     }
-  }, [hotelId])
+  }, [hotelSlug])
 
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity.toLowerCase()
@@ -89,9 +89,9 @@ export default function HotelDetailPage() {
 
   const getAllImages = () => {
     const images = []
-    if (hotel?.image) images.push(hotel.image)
-    if (hotel?.gallery && hotel.gallery.length > 0) {
-      images.push(...hotel.gallery)
+    if (hotel?.thumbnail_image) images.push(hotel.thumbnail_image)
+    if (hotel?.gallery_images && hotel.gallery_images.length > 0) {
+      images.push(...hotel.gallery_images)
     }
     return images.length > 0 ? images : ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop']
   }
@@ -149,7 +149,7 @@ export default function HotelDetailPage() {
 
   const images = getAllImages()
   const minPrice = getMinPrice()
-  const reviewsCount = generateReviewsCount(hotel.rating)
+  const reviewsCount = generateReviewsCount(hotel.star_rating || 4)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -170,7 +170,7 @@ export default function HotelDetailPage() {
               <h1 className="text-2xl font-bold text-gray-900">{hotel.name}</h1>
               <div className="flex items-center gap-2 text-gray-600 mt-1">
                 <MapPin className="h-4 w-4" />
-                <span>{hotel.location}</span>
+                <span>{hotel.address}</span>
               </div>
             </div>
           </div>
@@ -261,13 +261,13 @@ export default function HotelDetailPage() {
                           <Star
                             key={i}
                             className={`h-5 w-5 ${
-                              i < Math.floor(hotel.rating)
+                              i < Math.floor(hotel.star_rating || 4)
                                 ? 'fill-yellow-400 text-yellow-400'
                                 : 'text-gray-300'
                             }`}
                           />
                         ))}
-                        <span className="ml-2 text-lg font-semibold text-gray-900">{hotel.rating}</span>
+                        <span className="ml-2 text-lg font-semibold text-gray-900">{hotel.star_rating || 4}</span>
                         <span className="text-gray-600">({reviewsCount} reviews)</span>
                       </div>
                     </div>
@@ -286,10 +286,10 @@ export default function HotelDetailPage() {
                   )}
                 </div>
 
-                {hotel.description && (
+                {hotel.short_description && (
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">About This Hotel</h3>
-                    <p className="text-gray-700 leading-relaxed">{hotel.description}</p>
+                    <p className="text-gray-700 leading-relaxed">{hotel.short_description}</p>
                   </div>
                 )}
 
@@ -298,10 +298,10 @@ export default function HotelDetailPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Contact Information</h3>
                     <div className="space-y-3">
-                      {hotel.contact && (
+                      {hotel.contact_number && (
                         <div className="flex items-center gap-3">
                           <Phone className="h-5 w-5 text-gray-400" />
-                          <span className="text-gray-700">{hotel.contact}</span>
+                          <span className="text-gray-700">{hotel.contact_number}</span>
                         </div>
                       )}
                       {hotel.email && (
@@ -316,16 +316,16 @@ export default function HotelDetailPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Check-in Information</h3>
                     <div className="space-y-3">
-                      {hotel.checkIn && (
+                      {hotel.check_in_time && (
                         <div className="flex items-center gap-3">
                           <Clock className="h-5 w-5 text-gray-400" />
-                          <span className="text-gray-700">Check-in: {hotel.checkIn}</span>
+                          <span className="text-gray-700">Check-in: {hotel.check_in_time}</span>
                         </div>
                       )}
-                      {hotel.checkOut && (
+                      {hotel.check_out_time && (
                         <div className="flex items-center gap-3">
                           <Clock className="h-5 w-5 text-gray-400" />
-                          <span className="text-gray-700">Check-out: {hotel.checkOut}</span>
+                          <span className="text-gray-700">Check-out: {hotel.check_out_time}</span>
                         </div>
                       )}
                     </div>
@@ -351,220 +351,30 @@ export default function HotelDetailPage() {
               </Card>
             )}
 
-            {/* Location & Map */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <div className="flex items-start gap-3 mb-4">
-                      <MapPin className="h-5 w-5 text-orange-600 mt-1 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Address</h4>
-                        <p className="text-gray-700">{hotel.address}</p>
-                        <p className="text-gray-600 text-sm mt-1">{hotel.location}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-gray-900">Nearby Attractions</h4>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex justify-between">
-                          <span>City Center</span>
-                          <span>2.5 km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Airport</span>
-                          <span>15 km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Railway Station</span>
-                          <span>3.2 km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Shopping Mall</span>
-                          <span>1.8 km</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="bg-gray-100 rounded-lg h-64 flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <MapPin className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm">Interactive Map</p>
-                        <p className="text-xs">Coming Soon</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Reviews Section */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Guest Reviews</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(hotel.rating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="font-semibold text-gray-900">{hotel.rating}</span>
-                    <span className="text-gray-600">({reviewsCount} reviews)</span>
-                  </div>
-                </div>
-
-                {/* Review Categories */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-gray-900">{(hotel.rating * 0.95).toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">Cleanliness</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-gray-900">{(hotel.rating * 0.92).toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">Service</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-gray-900">{(hotel.rating * 0.98).toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">Location</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-gray-900">{(hotel.rating * 0.89).toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">Value</div>
-                  </div>
-                </div>
-
-                {/* Sample Reviews */}
-                <div className="space-y-4">
-                  <div className="border-b border-gray-200 pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-orange-600 font-semibold text-sm">RK</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900">Rahul Kumar</span>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-gray-700 text-sm mb-2">
-                          "Excellent stay! The hotel exceeded our expectations. Clean rooms, friendly staff, and great location. The amenities were top-notch and the service was outstanding."
-                        </p>
-                        <span className="text-xs text-gray-500">2 days ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-b border-gray-200 pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-semibold text-sm">PS</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900">Priya Sharma</span>
-                          <div className="flex items-center gap-1">
-                            {[...Array(4)].map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
-                            <Star className="h-3 w-3 text-gray-300" />
-                          </div>
-                        </div>
-                        <p className="text-gray-700 text-sm mb-2">
-                          "Good hotel with comfortable rooms. The breakfast was delicious and the location is convenient. Only minor issue was the WiFi speed in some areas."
-                        </p>
-                        <span className="text-xs text-gray-500">1 week ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-600 font-semibold text-sm">AM</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900">Amit Mehta</span>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-gray-700 text-sm mb-2">
-                          "Perfect for business travel. Professional service, well-equipped rooms, and excellent business center facilities. Will definitely stay again."
-                        </p>
-                        <span className="text-xs text-gray-500">2 weeks ago</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 text-center">
-                  <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
-                    View All Reviews
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
             {/* Policies */}
-            {(hotel.cancellationPolicy || hotel.houseRules) && (
+            {(hotel.cancellation_policy || hotel.house_rules) && (
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Policies & Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {hotel.cancellationPolicy && (
+                    {hotel.cancellation_policy && (
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                           <CreditCard className="h-4 w-4" />
                           Cancellation Policy
                         </h4>
-                        <p className="text-gray-700 text-sm leading-relaxed">{hotel.cancellationPolicy}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">{hotel.cancellation_policy}</p>
                       </div>
                     )}
-                    {hotel.houseRules && (
+                    {hotel.house_rules && (
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                           <Shield className="h-4 w-4" />
                           House Rules
                         </h4>
-                        <p className="text-gray-700 text-sm leading-relaxed">{hotel.houseRules}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">{hotel.house_rules}</p>
                       </div>
                     )}
-                  </div>
-
-                  {/* Additional Policies */}
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-3">Important Information</h4>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-green-600" />
-                        <span>Government ID required at check-in</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-blue-600" />
-                        <span>Credit card required for incidentals</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-orange-600" />
-                        <span>Early check-in subject to availability</span>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -581,7 +391,7 @@ export default function HotelDetailPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Star Rating</span>
                     <div className="flex items-center gap-1">
-                      {[...Array(hotel.rating)].map((_, i) => (
+                      {[...Array(hotel.star_rating || 4)].map((_, i) => (
                         <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
@@ -592,15 +402,16 @@ export default function HotelDetailPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Check-in</span>
-                    <span className="font-medium">{hotel.checkIn || '2:00 PM'}</span>
+                    <span className="font-medium">{hotel.check_in_time || '2:00 PM'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Check-out</span>
-                    <span className="font-medium">{hotel.checkOut || '11:00 AM'}</span>
+                    <span className="font-medium">{hotel.check_out_time || '11:00 AM'}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
             {/* Booking Card */}
             <Card>
               <CardContent className="p-6">
@@ -671,11 +482,11 @@ export default function HotelDetailPage() {
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h4 className="font-medium text-gray-900 mb-3">Need Help?</h4>
                   <div className="space-y-2">
-                    {hotel.contact && (
+                    {hotel.contact_number && (
                       <Button 
                         variant="outline" 
                         className="w-full justify-start text-left"
-                        onClick={() => window.open(`tel:${hotel.contact}`)}
+                        onClick={() => window.open(`tel:${hotel.contact_number}`)}
                       >
                         <Phone className="h-4 w-4 mr-2" />
                         Call Hotel
@@ -755,22 +566,6 @@ export default function HotelDetailPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                  
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs font-bold">i</span>
-                      </div>
-                      <div className="text-sm text-blue-800">
-                        <p className="font-medium mb-1">Room Selection Tips:</p>
-                        <ul className="text-xs space-y-1">
-                          <li>• Prices may vary based on dates and availability</li>
-                          <li>• All rooms include complimentary WiFi and daily housekeeping</li>
-                          <li>• Early check-in and late check-out subject to availability</li>
-                        </ul>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

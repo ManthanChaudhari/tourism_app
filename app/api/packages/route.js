@@ -1,6 +1,39 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, packageId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingPackage } = await supabase
+      .from('packages')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', packageId || '')
+      .single();
+    
+    if (!existingPackage) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 export async function POST(request) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -48,6 +81,12 @@ export async function POST(request) {
       itinerary: JSON.parse(formData.get('itinerary') || '[]'),
       created_by: user.id
     }
+
+    // Generate slug if not provided
+    const slugInput = formData.get('slug');
+    const baseSlug = slugInput && slugInput.trim() ? slugInput.trim() : generateSlug(packageData.title);
+    const finalSlug = await ensureUniqueSlug(supabase, baseSlug);
+    packageData.slug = finalSlug;
 
     // Store destination and category values directly (can be UUID or text)
     const destinationValue = formData.get('destination')
@@ -203,6 +242,7 @@ export async function GET(request) {
       .from('packages')
       .select(publicAccess ? `
         id,
+        slug,
         title,
         destination,
         category,
@@ -315,6 +355,7 @@ export async function GET(request) {
 
         return {
           id: pkg.id,
+          slug : pkg.slug,
           title: pkg.title,
           destination: destinationName,
           category: categoryName,

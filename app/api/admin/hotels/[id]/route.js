@@ -1,6 +1,39 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, hotelId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingHotel } = await supabase
+      .from('hotels')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', hotelId || '')
+      .single();
+    
+    if (!existingHotel) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 // GET /api/admin/hotels/[id] - Get single hotel
 export async function GET(request, { params }) {
   try {
@@ -63,6 +96,7 @@ export async function PUT(request, { params }) {
       
       hotelData = {
         name: formData.get('name'),
+        slug: formData.get('slug'),
         destination_id: formData.get('destination_id'),
         address: formData.get('address'),
         star_rating: parseInt(formData.get('star_rating')) || 3,
@@ -75,6 +109,18 @@ export async function PUT(request, { params }) {
         amenities: JSON.parse(formData.get('amenities') || '[]'),
         cancellation_policy: formData.get('cancellation_policy'),
         house_rules: formData.get('house_rules')
+      }
+
+      // Handle slug generation
+      const slugInput = formData.get('slug');
+      if (slugInput && slugInput.trim()) {
+        // User provided a slug, ensure it's unique
+        const baseSlug = generateSlug(slugInput.trim());
+        hotelData.slug = await ensureUniqueSlug(supabase, baseSlug, id);
+      } else if (hotelData.name && hotelData.name.trim()) {
+        // Auto-generate slug from name
+        const baseSlug = generateSlug(hotelData.name.trim());
+        hotelData.slug = await ensureUniqueSlug(supabase, baseSlug, id);
       }
 
       // Handle thumbnail image upload
@@ -178,7 +224,8 @@ export async function PUT(request, { params }) {
         gallery_images,
         amenities,
         cancellation_policy,
-        house_rules
+        house_rules,
+        slug
       } = body
 
       hotelData = {
@@ -197,6 +244,17 @@ export async function PUT(request, { params }) {
         amenities: amenities || [],
         cancellation_policy,
         house_rules
+      }
+
+      // Handle slug generation
+      if (slug && slug.trim()) {
+        // User provided a slug, ensure it's unique
+        const baseSlug = generateSlug(slug.trim());
+        hotelData.slug = await ensureUniqueSlug(supabase, baseSlug, id);
+      } else if (name && name.trim()) {
+        // Auto-generate slug from name
+        const baseSlug = generateSlug(name.trim());
+        hotelData.slug = await ensureUniqueSlug(supabase, baseSlug, id);
       }
     }
 
@@ -225,6 +283,7 @@ export async function PUT(request, { params }) {
     // Clean up data for update
     const updateData = {
       name: hotelData.name.trim(),
+      slug : hotelData.slug.trim(),
       destination_id: hotelData.destination_id,
       address: hotelData.address.trim(),
       star_rating: hotelData.star_rating,

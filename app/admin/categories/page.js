@@ -13,16 +13,158 @@ import {
   Star,
   StarOff,
   Tag,
-  ArrowUpDown,
+  GripVertical,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
   AlertCircle,
   CheckCircle
 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+
+// Sortable Row Component
+function SortableRow({ category, onDelete, deleteLoading, getStatusBadge, reorderLoading }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const isReordering = reorderLoading === category.id
+
+  return (
+    <tr 
+      ref={setNodeRef} 
+      style={style} 
+      className={`hover:bg-gray-50 transition-colors ${isDragging ? 'bg-gray-100' : ''}`}
+    >
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div 
+          {...attributes} 
+          {...listeners}
+          className={`p-1 rounded inline-flex relative ${
+            isReordering 
+              ? 'cursor-wait' 
+              : 'cursor-grab active:cursor-grabbing hover:bg-gray-200'
+          }`}
+        >
+          {isReordering ? (
+            <RefreshCw className="h-4 w-4 text-orange-600 animate-spin" />
+          ) : (
+            <GripVertical className="h-4 w-4 text-gray-400" />
+          )}
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex items-center space-x-3">
+          {category.icon && (
+            <div className="flex-shrink-0">
+              {category.icon.startsWith('http') ? (
+                <img 
+                  src={category.icon} 
+                  alt={category.name}
+                  className="h-8 w-8 rounded object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 bg-orange-100 rounded flex items-center justify-center">
+                  <span className="text-sm">{category.icon}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              {category.name}
+            </div>
+            <div className="text-sm text-gray-500">
+              /{category.slug}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-sm text-gray-900 max-w-xs truncate">
+          {category.description || '-'}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {category.is_featured ? (
+          <Star className="h-4 w-4 text-yellow-500 fill-current" />
+        ) : (
+          <StarOff className="h-4 w-4 text-gray-400" />
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {getStatusBadge(category.status)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {new Date(category.created_at).toLocaleDateString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <div className="flex items-center justify-end gap-2">
+          <Link href={`/admin/categories/${category.id}`}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              View
+            </Button>
+          </Link>
+          <Link href={`/admin/categories/${category.id}/edit`}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <Edit className="h-3 w-3 mr-1" />
+              Edit
+            </Button>
+          </Link>
+          <Button
+            onClick={() => onDelete(category.id, category.name)}
+            disabled={deleteLoading === category.id}
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            {deleteLoading === category.id ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </td>
+    </tr>
+  )
+}
 
 export default function CategoriesPage() {
   const router = useRouter()
@@ -32,6 +174,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(null)
+  const [reorderLoading, setReorderLoading] = useState(null) // Changed to track specific category ID
   const [message, setMessage] = useState({ type: '', text: '' })
   const [showFilters, setShowFilters] = useState(false)
   
@@ -39,11 +182,19 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all')
   const [featuredFilter, setFeaturedFilter] = useState(searchParams.get('featured') || 'all')
-  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'display_order')
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'position')
   const [sortOrder, setSortOrder] = useState(searchParams.get('sortOrder') || 'asc')
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
   const [pagination, setPagination] = useState(null)
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const fetchCategories = async () => {
     setLoading(true)
@@ -93,13 +244,61 @@ export default function CategoriesPage() {
     if (searchTerm) params.set('search', searchTerm)
     if (statusFilter !== 'all') params.set('status', statusFilter)
     if (featuredFilter !== 'all') params.set('featured', featuredFilter)
-    if (sortBy !== 'display_order') params.set('sortBy', sortBy)
+    if (sortBy !== 'position') params.set('sortBy', sortBy)
     if (sortOrder !== 'asc') params.set('sortOrder', sortOrder)
     if (currentPage !== 1) params.set('page', currentPage.toString())
     
     const newUrl = params.toString() ? `?${params.toString()}` : ''
     router.replace(`/admin/categories${newUrl}`, { scroll: false })
   }, [searchTerm, statusFilter, featuredFilter, sortBy, sortOrder, currentPage, router])
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+
+    if (active.id !== over?.id) {
+      const oldIndex = categories.findIndex((item) => item.id === active.id)
+      const newIndex = categories.findIndex((item) => item.id === over.id)
+
+      const newCategories = arrayMove(categories, oldIndex, newIndex)
+      setCategories(newCategories)
+
+      // Update order in backend - track the specific category being moved
+      setReorderLoading(active.id)
+      try {
+        const categoryIds = newCategories.map(cat => cat.id)
+        const response = await fetch('/api/admin/categories/reorder', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ categoryIds }),
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to update category order')
+        }
+
+        setMessage({ 
+          type: 'success', 
+          text: 'Category order updated successfully' 
+        })
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+      } catch (err) {
+        console.error('Reorder error:', err)
+        setMessage({ 
+          type: 'error', 
+          text: `Failed to update order: ${err.message}` 
+        })
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000)
+        // Revert the change
+        fetchCategories()
+      } finally {
+        setReorderLoading(null)
+      }
+    }
+  }
 
   const handleDelete = async (categoryId, categoryName) => {
     if (!confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
@@ -118,7 +317,7 @@ export default function CategoriesPage() {
         throw new Error(result.error || 'Failed to delete category')
       }
 
-      // Refresh the list
+      // Refresh the categories list
       fetchCategories()
       setMessage({ 
         type: 'success', 
@@ -172,11 +371,14 @@ export default function CategoriesPage() {
     }
     
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${styles[status] || styles.inactive}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[status] || styles.inactive}`}>
+        {status === 'active' ? 'Active' : 'Inactive'}
       </span>
     )
   }
+
+  // Check if drag and drop should be enabled
+  const isDragEnabled = sortBy === 'position' && sortOrder === 'asc' && !hasActiveFilters && pagination?.totalPages === 1
 
   if (loading && categories.length === 0) {
     return (
@@ -184,7 +386,7 @@ export default function CategoriesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
-            <p className="text-gray-600 mt-1">Manage package categories and their settings</p>
+            <p className="text-gray-600 mt-1">Manage package categories</p>
           </div>
         </div>
         
@@ -207,8 +409,8 @@ export default function CategoriesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
           <p className="text-gray-600 mt-1">
-            Manage package categories and their settings.
-            {pagination && pagination.totalItems > 0 && (
+            Manage package categories and their ordering.
+            {pagination && (
               <span className="ml-2 text-sm">
                 ({pagination.totalItems} total categories)
               </span>
@@ -247,6 +449,18 @@ export default function CategoriesPage() {
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
           )}
           <span>{message.text}</span>
+        </div>
+      )}
+
+      {/* Drag and Drop Info */}
+      {isDragEnabled && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">
+              Drag and drop enabled! Use the grip handles to reorder categories.
+            </span>
+          </div>
         </div>
       )}
 
@@ -323,7 +537,7 @@ export default function CategoriesPage() {
             {/* Filters Panel */}
             {showFilters && (
               <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
@@ -332,7 +546,7 @@ export default function CategoriesPage() {
                         setStatusFilter(e.target.value)
                         setCurrentPage(1)
                       }}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="all">All Status</option>
                       <option value="active">Active</option>
@@ -348,7 +562,7 @@ export default function CategoriesPage() {
                         setFeaturedFilter(e.target.value)
                         setCurrentPage(1)
                       }}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="all">All Categories</option>
                       <option value="true">Featured Only</option>
@@ -366,10 +580,9 @@ export default function CategoriesPage() {
                         setSortOrder(order)
                         setCurrentPage(1)
                       }}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
-                      <option value="display_order-asc">Display Order (A-Z)</option>
-                      <option value="display_order-desc">Display Order (Z-A)</option>
+                      <option value="position-asc">Position (A-Z)</option>
                       <option value="name-asc">Name (A-Z)</option>
                       <option value="name-desc">Name (Z-A)</option>
                       <option value="created_at-desc">Newest First</option>
@@ -413,7 +626,7 @@ export default function CategoriesPage() {
             <p className="text-gray-600 mb-4">
               {hasActiveFilters 
                 ? "No categories match your current filters. Try adjusting your search criteria."
-                : "No categories have been created yet. Add your first category to get started."
+                : "No categories have been added yet. Add your first category to get started."
               }
             </p>
             <div className="flex items-center justify-center gap-3">
@@ -439,7 +652,7 @@ export default function CategoriesPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Order
+                      {isDragEnabled ? 'Order' : 'Position'}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
@@ -462,93 +675,117 @@ export default function CategoriesPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {categories.map((category) => (
-                    <tr key={category.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">
-                          {category.display_order}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          {category.icon && (
-                            <div className="flex-shrink-0">
-                              {category.icon.startsWith('http') ? (
-                                <img 
-                                  src={category.icon} 
-                                  alt={category.name}
-                                  className="h-8 w-8 rounded object-cover"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 bg-orange-100 rounded flex items-center justify-center">
-                                  <span className="text-sm">{category.icon}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {category.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              /{category.slug}
+                  {isDragEnabled ? (
+                    <DndContext 
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext 
+                        items={categories.map(cat => cat.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {categories.map((category) => (
+                          <SortableRow
+                            key={category.id}
+                            category={category}
+                            onDelete={handleDelete}
+                            deleteLoading={deleteLoading}
+                            getStatusBadge={getStatusBadge}
+                            reorderLoading={reorderLoading}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  ) : (
+                    categories.map((category, index) => (
+                      <tr key={category.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-gray-900">
+                            {((currentPage - 1) * itemsPerPage) + index + 1}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            {category.icon && (
+                              <div className="flex-shrink-0">
+                                {category.icon.startsWith('http') ? (
+                                  <img 
+                                    src={category.icon} 
+                                    alt={category.name}
+                                    className="h-8 w-8 rounded object-cover"
+                                  />
+                                ) : (
+                                  <div className="h-8 w-8 bg-orange-100 rounded flex items-center justify-center">
+                                    <span className="text-sm">{category.icon}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {category.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                /{category.slug}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
-                          {category.description || '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {category.is_featured ? (
-                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        ) : (
-                          <StarOff className="h-4 w-4 text-gray-400" />
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(category.status)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(category.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={`/admin/categories/${category.id}`}>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                            {category.description || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {category.is_featured ? (
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                          ) : (
+                            <StarOff className="h-4 w-4 text-gray-400" />
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(category.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(category.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link href={`/admin/categories/${category.id}`}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                            </Link>
+                            <Link href={`/admin/categories/${category.id}/edit`}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                            </Link>
                             <Button
+                              onClick={() => handleDelete(category.id, category.name)}
+                              disabled={deleteLoading === category.id}
                               size="sm"
-                              variant="outline"
-                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              className="bg-red-600 hover:bg-red-700 text-white"
                             >
-                              <Eye className="h-3 w-3 mr-1" />
-                              View
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              {deleteLoading === category.id ? 'Deleting...' : 'Delete'}
                             </Button>
-                          </Link>
-                          <Link href={`/admin/categories/${category.id}/edit`}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
-                          </Link>
-                          <Button
-                            onClick={() => handleDelete(category.id, category.name)}
-                            disabled={deleteLoading === category.id}
-                            size="sm"
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            {deleteLoading === category.id ? 'Deleting...' : 'Delete'}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -613,6 +850,7 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+
     </div>
   )
 }

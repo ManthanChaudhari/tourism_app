@@ -1,6 +1,39 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, carId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingCar } = await supabase
+      .from('cars')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', carId || '')
+      .single();
+    
+    if (!existingCar) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
 
 // GET - Fetch single car
 export async function GET(request, { params }) {
@@ -66,9 +99,22 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Failed to update car' }, { status: 500 });
     }
 
+    // Handle slug generation
+    let finalSlug = null;
+    if (body.slug && body.slug.trim()) {
+      // User provided a slug, ensure it's unique
+      const baseSlug = generateSlug(body.slug.trim());
+      finalSlug = await ensureUniqueSlug(supabase, baseSlug, id);
+    } else if (body.name && body.name.trim()) {
+      // Auto-generate slug from name
+      const baseSlug = generateSlug(body.name.trim());
+      finalSlug = await ensureUniqueSlug(supabase, baseSlug, id);
+    }
+
     // Prepare car data
     const carData = {
       name: body.name.trim(),
+      slug: finalSlug,
       brand: body.brand.trim(),
       model: body.model.trim(),
       year: parseInt(body.year),

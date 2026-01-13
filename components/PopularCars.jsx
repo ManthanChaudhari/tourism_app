@@ -199,7 +199,7 @@ export default function PopularCars() {
                 const reviewsCount = generateReviewsCount(rating)
                 
                 return (
-                  <Link key={car.id} href={`/cars/${car.id}`}>
+                  <Link key={car.id} href={`/cars/${car.slug || car.id}`}>
                     <Card className="group overflow-hidden flex-shrink-0 w-72 h-96 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <CardContent className="p-0 relative h-full flex flex-col">
                         <div className="relative h-48 overflow-hidden flex-shrink-0">

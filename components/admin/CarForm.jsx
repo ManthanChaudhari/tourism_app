@@ -8,6 +8,7 @@ import DestinationDropdown from './DestinationDropdown';
 export default function CarForm({ car, onClose, onSave, onCancel, saving, isPage = false }) {
   const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     brand: '',
     model: '',
     year: new Date().getFullYear(),
@@ -56,6 +57,21 @@ export default function CarForm({ car, onClose, onSave, onCancel, saving, isPage
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Auto-generate slug from name if slug is empty
+    if (name === 'name' && !formData.slug) {
+      const autoSlug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      setFormData(prev => ({
+        ...prev,
+        name: type === 'checkbox' ? checked : value,
+        slug: autoSlug
+      }));
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -192,6 +208,26 @@ export default function CarForm({ car, onClose, onSave, onCancel, saving, isPage
                 placeholder="e.g., Swift Dzire"
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                URL Slug
+              </label>
+              <input
+                type="text"
+                name="slug"
+                value={formData.slug}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors ${
+                  errors.slug ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="swift-dzire"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                URL-friendly version of the car name. Leave empty to auto-generate.
+              </p>
+              {errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug}</p>}
             </div>
 
             <div>

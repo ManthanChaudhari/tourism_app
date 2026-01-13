@@ -21,7 +21,7 @@ export async function GET(request) {
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || ''
     const featured = searchParams.get('featured') || ''
-    const sortBy = searchParams.get('sortBy') || 'display_order'
+    const sortBy = searchParams.get('sortBy') || 'position'
     const sortOrder = searchParams.get('sortOrder') || 'asc'
     const publicAccess = searchParams.get('public') === 'true'
 
@@ -58,8 +58,8 @@ export async function GET(request) {
     const offset = (validatedPage - 1) * validatedLimit
 
     // Validate sort parameters
-    const validSortFields = ['name', 'display_order', 'status', 'created_at', 'updated_at']
-    const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'display_order'
+    const validSortFields = ['name', 'position', 'status', 'created_at', 'updated_at']
+    const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'position'
     const validatedSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'asc'
 
     // Build the query
@@ -89,12 +89,7 @@ export async function GET(request) {
     }
 
     // Apply sorting
-    if (validatedSortBy === 'display_order') {
-      query = query.order('display_order', { ascending: validatedSortOrder === 'asc' })
-      query = query.order('name', { ascending: true }) // Secondary sort by name
-    } else {
-      query = query.order(validatedSortBy, { ascending: validatedSortOrder === 'asc' })
-    }
+    query = query.order(validatedSortBy, { ascending: validatedSortOrder === 'asc' })
 
     // Apply pagination
     query = query.range(offset, offset + validatedLimit - 1)
@@ -181,7 +176,6 @@ export async function POST(request) {
       description, 
       icon, 
       banner_image, 
-      display_order = 0, 
       is_featured = false, 
       status = 'active' 
     } = body
@@ -225,7 +219,6 @@ export async function POST(request) {
       description: description?.trim() || null,
       icon: icon?.trim() || null,
       banner_image: banner_image?.trim() || null,
-      display_order: parseInt(display_order) || 0,
       is_featured: Boolean(is_featured),
       status
     }

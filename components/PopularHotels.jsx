@@ -182,7 +182,7 @@ export default function PopularHotels() {
                 const reviewsCount = generateReviewsCount(hotel.rating, hotel.created_at)
                 
                 return (
-                  <Link key={hotel.id} href={`/hotels/${hotel.id}`}>
+                  <Link key={hotel.id} href={`/hotels/${hotel.slug || hotel.id}`}>
                     <Card className="group overflow-hidden flex-shrink-0 w-72 h-96 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <CardContent className="p-0 relative h-full flex flex-col">
                         <div className="relative h-48 overflow-hidden flex-shrink-0">
