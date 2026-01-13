@@ -1,0 +1,481 @@
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { NextResponse } from "next/server"
+
+// Helper function to generate slug from text
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Helper function to ensure unique slug
+async function ensureUniqueSlug(supabase, baseSlug, packageId = null) {
+  let finalSlug = baseSlug;
+  let counter = 1;
+  
+  while (true) {
+    const { data: existingPackage } = await supabase
+      .from('packages')
+      .select('id')
+      .eq('slug', finalSlug)
+      .neq('id', packageId || '')
+      .single();
+    
+    if (!existingPackage) {
+      break;
+    }
+    
+    finalSlug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  
+  return finalSlug;
+}
+
+export async function GET(request, { params }) {
+  try {
+    const supabase = await createSupabaseServerClient()
+    
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const publicAccess = searchParams.get('public') === 'true'
+    
+    // For public access, we don't require authentication
+    if (!publicAccess) {
+      // Verify user session for admin access
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Please log in' },
+          { status: 401 }
+        )
+      }
+
+      // Check if user is admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || profile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Forbidden - Admin access required' },
+          { status: 403 }
+        )
+      }
+    }
+
+    const awaitedParams = await params;
+    const packageId = awaitedParams.id;
+
+    if (!packageId) {
+      return NextResponse.json(
+        { error: 'Package ID is required' },
+        { status: 400 }
+      )
+    }
+
+    let query = supabase
+      .from('packages')
+      .select(publicAccess ? `
+        id,
+        title,
+        destination,
+        category,
+        days,
+        nights,
+        price_per_person,
+        discount,
+        description,
+        thumbnail_image_url,
+        gallery_image_urls,
+        inclusions,
+        exclusions,
+        itinerary,
+        pickup_location,
+        drop_location,
+        created_at,
+        updated_at
+      ` : `*`)
+      .eq('id', packageId)
+
+    // For public access, only show published packages
+    if (publicAccess) {
+      query = query.eq('status', 'published')
+    }
+
+    const { data: packageData, error: fetchError } = await query.single()
+
+    if (fetchError) {
+      console.error('Database fetch error:', fetchError)
+      
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Package not found' },
+          { status: 404 }
+        )
+      }
+      
+      return NextResponse.json(
+        { error: 'Failed to fetch package' },
+        { status: 500 }
+      )
+    }
+
+    // Format package for public consumption if needed
+    let formattedPackage = packageData
+    
+    // Helper function to check if a string is a UUID
+    const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+    
+    // Fetch location and category data if UUIDs
+    let destinationName = packageData.destination
+    let categoryName = packageData.category
+    
+    if (isUUID(packageData.destination)) {
+      const { data: location } = await supabase
+        .from('locations')
+        .select('id, name, slug, type, parent:parent_id(name)')
+        .eq('id', packageData.destination)
+        .single()
+      
+      if (location) {
+        if (location.type === 'city' && location.parent) {
+          destinationName = `${location.name}, ${location.parent.name}`
+        } else {
+          destinationName = location.name
+        }
+      }
+    }
+    
+    if (isUUID(packageData.category)) {
+      const { data: category } = await supabase
+        .from('categories')
+        .select('id, name, slug, icon, is_featured')
+        .eq('id', packageData.category)
+        .single()
+      
+      if (category) {
+        categoryName = category.name
+      }
+    }
+
+    if (publicAccess) {
+      formattedPackage = {
+        id: packageData.id,
+        title: packageData.title,
+        destination: destinationName,
+        category: categoryName,
+        duration: `${packageData.days} days, ${packageData.nights} nights`,
+        days: packageData.days,
+        nights: packageData.nights,
+        price: packageData.price_per_person,
+        originalPrice: packageData.discount ? packageData.price_per_person : null,
+        discountedPrice: packageData.discount ? 
+          Math.round(packageData.price_per_person - (packageData.price_per_person * packageData.discount / 100)) : 
+          packageData.price_per_person,
+        discount: packageData.discount,
+        description: packageData.description,
+        image: packageData.thumbnail_image_url,
+        images: packageData.gallery_image_urls || [],
+        inclusions: packageData.inclusions || [],
+        exclusions: packageData.exclusions || [],
+        itinerary: packageData.itinerary || [],
+        pickupLocation: packageData.pickup_location,
+        dropLocation: packageData.drop_location,
+        createdAt: packageData.created_at,
+        updatedAt: packageData.updated_at
+      }
+    } else {
+      // For admin access, also format destination and category names
+      formattedPackage = {
+        ...packageData,
+        destination_name: destinationName,
+        category_name: categoryName
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      package: formattedPackage
+    })
+
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request, { params }) {
+  try {
+    const supabase = await createSupabaseServerClient()
+    
+    // Verify user session
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please log in' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || profile?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const awaitedParam = await params;
+    const packageId  = awaitedParam.id;
+
+    if (!packageId) {
+      return NextResponse.json(
+        { error: 'Package ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Check if package exists
+    const { data: existingPackage, error: checkError } = await supabase
+      .from('packages')
+      .select('id')
+      .eq('id', packageId)
+      .single()
+
+    if (checkError) {
+      if (checkError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Package not found' },
+          { status: 404 }
+        )
+      }
+      
+      return NextResponse.json(
+        { error: 'Failed to verify package' },
+        { status: 500 }
+      )
+    }
+
+    const formData = await request.formData()
+    
+    const packageData = {
+      title: formData.get('title'),
+      destination: formData.get('destination'), // This will now be a location ID or text
+      category: formData.get('category'),
+      days: parseInt(formData.get('days')),
+      nights: parseInt(formData.get('nights')),
+      price_per_person: parseFloat(formData.get('pricePerPerson')),
+      discount: formData.get('discount') ? parseFloat(formData.get('discount')) : null,
+      description: formData.get('description'),
+      pickup_location: formData.get('pickupLocation') || null,
+      drop_location: formData.get('dropLocation') || null,
+      status: formData.get('status') || 'draft',
+      inclusions: JSON.parse(formData.get('inclusions') || '[]'),
+      exclusions: JSON.parse(formData.get('exclusions') || '[]'),
+      itinerary: JSON.parse(formData.get('itinerary') || '[]'),
+      updated_at: new Date().toISOString()
+    }
+
+    // Handle slug generation
+    const slugInput = formData.get('slug');
+    if (slugInput && slugInput.trim()) {
+      // User provided a slug, ensure it's unique
+      const baseSlug = generateSlug(slugInput.trim());
+      packageData.slug = await ensureUniqueSlug(supabase, baseSlug, packageId);
+    } else if (packageData.title && packageData.title.trim()) {
+      // Auto-generate slug from title
+      const baseSlug = generateSlug(packageData.title.trim());
+      packageData.slug = await ensureUniqueSlug(supabase, baseSlug, packageId);
+    }
+
+    // Store destination and category values directly (can be UUID or text)
+    const destinationValue = formData.get('destination')
+    const categoryValue = formData.get('category')
+    
+    packageData.destination = destinationValue
+    packageData.category = categoryValue
+
+    if (!packageData.title || !destinationValue || !packageData.days || 
+        !packageData.nights || !packageData.price_per_person || !categoryValue) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    let thumbnailImageUrl = null
+    let galleryImageUrls = []
+
+    const thumbnailImage = formData.get('thumbnailImage')
+    const keepExistingThumbnail = formData.get('keepExistingThumbnail') === 'true'
+    
+    if (thumbnailImage && thumbnailImage.size > 0) {
+      const thumbnailFileName = `packages/${Date.now()}-${thumbnailImage.name}`
+      
+      const { error: thumbnailError } = await supabase.storage
+        .from('package-images')
+        .upload(thumbnailFileName, thumbnailImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (thumbnailError) {
+        console.error('Thumbnail upload error:', thumbnailError)
+        return NextResponse.json(
+          { error: 'Failed to upload thumbnail image' },
+          { status: 500 }
+        )
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('package-images')
+        .getPublicUrl(thumbnailFileName)
+      
+      thumbnailImageUrl = publicUrl
+    } else if (keepExistingThumbnail) {
+      delete packageData.thumbnail_image_url
+    }
+
+    const galleryImages = formData.getAll('galleryImages')
+    const keepExistingGallery = formData.get('keepExistingGallery') === 'true'
+    
+    if (galleryImages.length > 0 && galleryImages[0].size > 0) {
+      for (const image of galleryImages) {
+        if (image && image.size > 0) {
+          const galleryFileName = `packages/gallery/${Date.now()}-${image.name}`
+          
+          const { error: galleryError } = await supabase.storage
+            .from('package-images')
+            .upload(galleryFileName, image, {
+              cacheControl: '3600',
+              upsert: false
+            })
+
+          if (!galleryError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('package-images')
+              .getPublicUrl(galleryFileName)
+            
+            galleryImageUrls.push(publicUrl)
+          }
+        }
+      }
+    } else if (keepExistingGallery) {
+      delete packageData.gallery_image_urls
+    }
+
+    if (thumbnailImageUrl) {
+      packageData.thumbnail_image_url = thumbnailImageUrl
+    }
+    if (galleryImageUrls.length > 0) {
+      packageData.gallery_image_urls = galleryImageUrls
+    }
+
+    const { data: updatedPackage, error: updateError } = await supabase
+      .from('packages')
+      .update(packageData)
+      .eq('id', packageId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Database update error:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update package' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      package: updatedPackage
+    })
+
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const supabase = await createSupabaseServerClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please log in' },
+        { status: 401 }
+      )
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || profile?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const awaitedParams = await params
+    const packageId = awaitedParams.id;
+
+    if (!packageId) {
+      return NextResponse.json(
+        { error: 'Package ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Delete the package
+    const { error: deleteError } = await supabase
+      .from('packages')
+      .delete()
+      .eq('id', packageId)
+
+    if (deleteError) {
+      console.error('Database delete error:', deleteError)
+      return NextResponse.json(
+        { error: 'Failed to delete package' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Package deleted successfully'
+    })
+
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

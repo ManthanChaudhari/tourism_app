@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Home, Info, MapPin, LogOut } from "lucide-react";
 import { useUser, useSupabase } from "@/lib/supabase/hooks";
 import { authAPI } from "@/lib/auth";
@@ -29,21 +30,23 @@ export default function Header() {
         <div className="flex items-center justify-between h-20 pt-6">
           {/* Logo */}
           <div className="flex flex-shrink-0">
-            <h1 className="text-2xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors duration-300">
-              BookingAdventures<span className="text-orange-600">.</span>
-            </h1>
+            <Link href="/">
+              <h1 className="text-2xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors duration-300">
+                BookingAdventures<span className="text-orange-600">.</span>
+              </h1>
+            </Link>
           </div>
 
           {/* Desktop Navigation Menu - Visible on larger screens */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a 
-              href="#" 
+            <Link 
+              href="/" 
               className="text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
             >
               <Home size={18} />
               Home
               <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left transition-transform duration-300 ease-out"></div>
-            </a>
+            </Link>
             <a 
               href="#" 
               className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
@@ -53,11 +56,11 @@ export default function Header() {
               <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
             </a>
             <a 
-              href="#" 
+              href="/packages" 
               className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
             >
               <MapPin size={18} />
-              Destination
+              Packages
               <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
             </a>
           </nav>

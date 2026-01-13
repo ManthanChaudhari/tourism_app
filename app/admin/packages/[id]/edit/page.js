@@ -12,48 +12,41 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  Clock
+  Clock,
+  Tag,
+  Percent,
+  Image as ImageIcon,
+  Navigation
 } from 'lucide-react'
 import Link from 'next/link'
+import DestinationDropdown from '@/components/admin/DestinationDropdown'
+import CategoryDropdown from '@/components/admin/CategoryDropdown'
 
-// Mock data - in real app, this would come from API
-const mockPackageData = {
-  1: {
-    id: 1,
-    title: 'Bali Adventure Package',
-    destination: 'Bali, Indonesia',
-    duration: '7 days, 6 nights',
-    price: 1299,
-    status: 'published',
-    description: 'Experience the magic of Bali with our comprehensive adventure package. From ancient temples to pristine beaches, this journey will take you through the heart of Indonesian culture and natural beauty.',
-    itinerary: [
-      { day: 1, title: 'Arrival in Denpasar', description: 'Airport pickup and transfer to hotel. Welcome dinner with traditional Balinese cuisine.' },
-      { day: 2, title: 'Ubud Cultural Tour', description: 'Visit Monkey Forest Sanctuary, Tegallalang Rice Terraces, and traditional art villages.' },
-      { day: 3, title: 'Temple Hopping', description: 'Explore Tanah Lot, Uluwatu Temple, and witness the famous Kecak fire dance.' }
-    ],
-    inclusions: [
-      'Round-trip airport transfers',
-      '6 nights accommodation in 4-star hotels',
-      'Daily breakfast and 3 dinners'
-    ],
-    exclusions: [
-      'International flights',
-      'Travel insurance',
-      'Personal expenses'
-    ]
-  }
-}
+const PACKAGE_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft', color: 'gray' },
+  { value: 'published', label: 'Published', color: 'green' }
+]
 
 export default function EditPackagePage() {
   const params = useParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     destination: '',
-    duration: '',
-    price: '',
+    category: '',
+    days: '',
+    nights: '',
+    pricePerPerson: '',
+    discount: '',
+    pickupLocation: '',
+    dropLocation: '',
     description: '',
+    thumbnailImage: null,
+    galleryImages: [],
     itinerary: [{ day: 1, title: '', description: '' }],
     inclusions: [''],
     exclusions: [''],
@@ -61,24 +54,47 @@ export default function EditPackagePage() {
   })
 
   useEffect(() => {
-    // Simulate API call to fetch package data
-    setTimeout(() => {
-      const data = mockPackageData[params.id]
-      if (data) {
+    const fetchPackage = async () => {
+      try {
+        const response = await fetch(`/api/packages/${params.id}`)
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch package')
+        }
+
+        const data = result.package
         setFormData({
-          title: data.title,
-          destination: data.destination,
-          duration: data.duration,
-          price: data.price.toString(),
-          description: data.description,
-          itinerary: data.itinerary,
-          inclusions: data.inclusions,
-          exclusions: data.exclusions,
-          status: data.status
+          title: data.title || '',
+          slug: data.slug || '',
+          destination: data.destination || '', // Use location ID if available, fallback to text
+          category: data.category || '', // Use the category field directly
+          days: data.days?.toString() || '',
+          nights: data.nights?.toString() || '',
+          pricePerPerson: data.price_per_person?.toString() || '',
+          discount: data.discount?.toString() || '',
+          pickupLocation: data.pickup_location || '',
+          dropLocation: data.drop_location || '',
+          description: data.description || '',
+          thumbnailImage: null, // Don't load existing files, just show URLs
+          galleryImages: [],
+          itinerary: data.itinerary || [{ day: 1, title: '', description: '' }],
+          inclusions: data.inclusions || [''],
+          exclusions: data.exclusions || [''],
+          status: data.status || 'draft',
+          // Store existing image URLs for display
+          existingThumbnailUrl: data.thumbnail_image_url,
+          existingGalleryUrls: data.gallery_image_urls || []
         })
+      } catch (error) {
+        console.error('Fetch error:', error)
+        setSubmitError(error.message || 'Failed to load package data')
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    }, 500)
+    }
+
+    fetchPackage()
   }, [params.id])
 
   const handleInputChange = (field, value) => {
@@ -86,6 +102,35 @@ export default function EditPackagePage() {
       ...prev,
       [field]: value
     }))
+    
+    // Auto-generate slug from title if slug is empty
+    if (field === 'title' && !formData.slug) {
+      const autoSlug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      setFormData(prev => ({
+        ...prev,
+        title: value,
+        slug: autoSlug
+      }));
+    }
+  }
+
+  const handleFileChange = (field, files) => {
+    if (field === 'thumbnailImage') {
+      setFormData(prev => ({
+        ...prev,
+        [field]: files[0] || null
+      }))
+    } else if (field === 'galleryImages') {
+      setFormData(prev => ({
+        ...prev,
+        [field]: Array.from(files)
+      }))
+    }
   }
 
   const handleItineraryChange = (index, field, value) => {
@@ -147,13 +192,96 @@ export default function EditPackagePage() {
     }
   }
 
-  const handleSubmit = (status) => {
-    // Here you would typically send the data to your backend
-    console.log('Updating package:', { ...formData, status })
-    
-    // Simulate save and redirect
-    alert(`Package ${status === 'published' ? 'published' : 'updated'} successfully!`)
-    router.push(`/admin/packages/${params.id}`)
+  const calculateDiscountedPrice = () => {
+    if (!formData.pricePerPerson || !formData.discount) return null
+    const price = parseFloat(formData.pricePerPerson)
+    const discount = parseFloat(formData.discount)
+    return price - (price * discount / 100)
+  }
+
+  const handleSubmit = async (status) => {
+    // Basic validation
+    if (!formData.title || !formData.destination || !formData.days || !formData.nights || !formData.pricePerPerson || !formData.category) {
+      setSubmitError('Please fill in all required fields')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      // Create FormData for file uploads
+      const submitFormData = new FormData()
+      
+      // Add basic fields
+      submitFormData.append('title', formData.title)
+      if (formData.slug) {
+        submitFormData.append('slug', formData.slug)
+      }
+      submitFormData.append('destination', formData.destination)
+      submitFormData.append('category', formData.category)
+      submitFormData.append('days', formData.days)
+      submitFormData.append('nights', formData.nights)
+      submitFormData.append('pricePerPerson', formData.pricePerPerson)
+      if (formData.discount) {
+        submitFormData.append('discount', formData.discount)
+      }
+      submitFormData.append('description', formData.description || '')
+      if (formData.pickupLocation) {
+        submitFormData.append('pickupLocation', formData.pickupLocation)
+      }
+      if (formData.dropLocation) {
+        submitFormData.append('dropLocation', formData.dropLocation)
+      }
+      submitFormData.append('status', status)
+
+      // Add arrays as JSON strings
+      const filteredInclusions = formData.inclusions.filter(item => item.trim() !== '')
+      const filteredExclusions = formData.exclusions.filter(item => item.trim() !== '')
+      const filteredItinerary = formData.itinerary.filter(item => item.title.trim() !== '' || item.description.trim() !== '')
+      
+      submitFormData.append('inclusions', JSON.stringify(filteredInclusions))
+      submitFormData.append('exclusions', JSON.stringify(filteredExclusions))
+      submitFormData.append('itinerary', JSON.stringify(filteredItinerary))
+
+      // Add images if new ones are selected
+      if (formData.thumbnailImage) {
+        submitFormData.append('thumbnailImage', formData.thumbnailImage)
+      } else {
+        // Keep existing thumbnail
+        submitFormData.append('keepExistingThumbnail', 'true')
+      }
+      
+      if (formData.galleryImages.length > 0) {
+        formData.galleryImages.forEach((image) => {
+          submitFormData.append('galleryImages', image)
+        })
+      } else {
+        // Keep existing gallery
+        submitFormData.append('keepExistingGallery', 'true')
+      }
+
+      // Submit to API
+      const response = await fetch(`/api/packages/${params.id}`, {
+        method: 'PUT',
+        body: submitFormData
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update package')
+      }
+
+      // Success - redirect to package view
+      router.push(`/admin/packages/${params.id}?success=updated`)
+      
+    } catch (error) {
+      console.error('Submit error:', error)
+      setSubmitError(error.message || 'Failed to update package. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -185,19 +313,26 @@ export default function EditPackagePage() {
         </div>
         
         <div className="flex space-x-3">
+          {submitError && (
+            <div className="flex-1 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{submitError}</p>
+            </div>
+          )}
           <button
             onClick={() => handleSubmit(formData.status)}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isSubmitting}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-5 w-5 mr-2 inline" />
-            Save Changes
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>
           <button
             onClick={() => handleSubmit('published')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Eye className="h-5 w-5 mr-2 inline" />
-            {formData.status === 'published' ? 'Update & Keep Published' : 'Save & Publish'}
+            {isSubmitting ? 'Publishing...' : (formData.status === 'published' ? 'Update & Keep Published' : 'Save & Publish')}
           </button>
         </div>
       </div>
@@ -206,92 +341,204 @@ export default function EditPackagePage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Basic Information</h2>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Package Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Enter package title"
+                  required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    Destination *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.destination}
-                    onChange={(e) => handleInputChange('destination', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Bali, Indonesia"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Duration *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.duration}
-                    onChange={(e) => handleInputChange('duration', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., 7 days, 6 nights"
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <DollarSign className="h-4 w-4 inline mr-1" />
-                  Price (USD) *
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  URL Slug
                 </label>
                 <input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1299"
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="package-url-slug"
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  URL-friendly version of the package title. Leave empty to auto-generate.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <MapPin className="h-4 w-4 inline mr-2" />
+                    Destination *
+                  </label>
+                  <DestinationDropdown
+                    value={formData.destination}
+                    onChange={(value) => handleInputChange('destination', value)}
+                    placeholder="Select destination..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Tag className="h-4 w-4 inline mr-2" />
+                    Category / Package Type *
+                  </label>
+                  <CategoryDropdown
+                    value={formData.category}
+                    onChange={(value) => handleInputChange('category', value)}
+                    placeholder="Select category..."
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Calendar className="h-4 w-4 inline mr-2" />
+                    Days *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.days}
+                    onChange={(e) => handleInputChange('days', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="7"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Clock className="h-4 w-4 inline mr-2" />
+                    Nights *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.nights}
+                    onChange={(e) => handleInputChange('nights', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="6"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <DollarSign className="h-4 w-4 inline mr-2" />
+                    Price per Person (USD) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.pricePerPerson}
+                    onChange={(e) => handleInputChange('pricePerPerson', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="1299.00"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Percent className="h-4 w-4 inline mr-2" />
+                    Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.discount}
+                    onChange={(e) => handleInputChange('discount', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="10"
+                  />
+                  {formData.discount && formData.pricePerPerson && (
+                    <p className="text-sm text-green-600 mt-2">
+                      Discounted price: ${calculateDiscountedPrice()?.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Package Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => handleInputChange('status', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  >
+                    {PACKAGE_STATUS_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Navigation className="h-4 w-4 inline mr-2" />
+                    Pickup Location
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.pickupLocation}
+                    onChange={(e) => handleInputChange('pickupLocation', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="e.g., Airport, Hotel, City Center"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Navigation className="h-4 w-4 inline mr-2" />
+                    Drop Location
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.dropLocation}
+                    onChange={(e) => handleInputChange('dropLocation', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="e.g., Airport, Hotel, City Center"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe your package..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="Describe your package, highlight key features and what makes it special..."
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  This description will be shown to customers on the package details page.
+                </p>
               </div>
             </div>
           </div>
@@ -346,46 +593,188 @@ export default function EditPackagePage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Package Images */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Package Images</h2>
+        <div className="space-y-8">
+          {/* Thumbnail Image */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <ImageIcon className="h-5 w-5 inline mr-2" />
+              Thumbnail Image *
+            </h2>
             
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">Upload new images</p>
-              <button className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                Choose Files
-              </button>
+            {/* Show existing thumbnail */}
+            {formData.existingThumbnailUrl && !formData.thumbnailImage && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Current thumbnail:</p>
+                <div className="aspect-video w-full max-w-xs bg-gray-100 rounded-lg overflow-hidden">
+                  <img 
+                    src={formData.existingThumbnailUrl} 
+                    alt="Current thumbnail"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      e.target.nextSibling.style.display = 'flex'
+                    }}
+                  />
+                  <div className="w-full h-full flex items-center justify-center text-gray-400" style={{ display: 'none' }}>
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+              {formData.thumbnailImage ? (
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600">
+                    New image selected: {formData.thumbnailImage.name}
+                  </div>
+                  <button
+                    onClick={() => handleInputChange('thumbnailImage', null)}
+                    className="text-red-600 hover:text-red-700 text-sm"
+                  >
+                    Remove New Image
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-3">
+                    {formData.existingThumbnailUrl ? 'Upload new thumbnail image' : 'Upload main package image'}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange('thumbnailImage', e.target.files)}
+                    className="hidden"
+                    id="thumbnail-upload"
+                  />
+                  <label
+                    htmlFor="thumbnail-upload"
+                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    Choose Image
+                  </label>
+                </>
+              )}
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {formData.existingThumbnailUrl && !formData.thumbnailImage 
+                ? 'Leave empty to keep current image, or upload a new one to replace it.'
+                : 'This will be the main image displayed for your package.'
+              }
+            </p>
+          </div>
+
+          {/* Gallery Images */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Gallery Images</h2>
+            
+            {/* Show existing gallery */}
+            {formData.existingGalleryUrls && formData.existingGalleryUrls.length > 0 && formData.galleryImages.length === 0 && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Current gallery ({formData.existingGalleryUrls.length} images):</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {formData.existingGalleryUrls.slice(0, 4).map((url, index) => (
+                    <div key={index} className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                      <img 
+                        src={url} 
+                        alt={`Gallery image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="w-full h-full flex items-center justify-center text-gray-400" style={{ display: 'none' }}>
+                        <ImageIcon className="h-4 w-4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {formData.existingGalleryUrls.length > 4 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    +{formData.existingGalleryUrls.length - 4} more images
+                  </p>
+                )}
+              </div>
+            )}
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+              {formData.galleryImages.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600">
+                    {formData.galleryImages.length} new image(s) selected
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {formData.galleryImages.map(img => img.name).join(', ')}
+                  </div>
+                  <button
+                    onClick={() => handleInputChange('galleryImages', [])}
+                    className="text-red-600 hover:text-red-700 text-sm"
+                  >
+                    Remove New Images
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-3">
+                    {formData.existingGalleryUrls && formData.existingGalleryUrls.length > 0 
+                      ? 'Upload new gallery images' 
+                      : 'Upload additional images'
+                    }
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleFileChange('galleryImages', e.target.files)}
+                    className="hidden"
+                    id="gallery-upload"
+                  />
+                  <label
+                    htmlFor="gallery-upload"
+                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    Choose Images
+                  </label>
+                </>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {formData.existingGalleryUrls && formData.existingGalleryUrls.length > 0 && formData.galleryImages.length === 0
+                ? 'Leave empty to keep current images, or upload new ones to add to the gallery.'
+                : 'Additional images to showcase your package (optional).'
+              }
+            </p>
           </div>
 
           {/* Inclusions */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Inclusions</h2>
               <button
                 onClick={() => addListItem('inclusions')}
-                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 <Plus className="h-4 w-4" />
               </button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               {formData.inclusions.map((inclusion, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <div key={index} className="flex items-center space-x-3">
                   <input
                     type="text"
                     value={inclusion}
                     onChange={(e) => handleListChange('inclusions', index, e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="What's included"
                   />
                   {formData.inclusions.length > 1 && (
                     <button
                       onClick={() => removeListItem('inclusions', index)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -396,31 +785,31 @@ export default function EditPackagePage() {
           </div>
 
           {/* Exclusions */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Exclusions</h2>
               <button
                 onClick={() => addListItem('exclusions')}
-                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 <Plus className="h-4 w-4" />
               </button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               {formData.exclusions.map((exclusion, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <div key={index} className="flex items-center space-x-3">
                   <input
                     type="text"
                     value={exclusion}
                     onChange={(e) => handleListChange('exclusions', index, e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="What's not included"
                   />
                   {formData.exclusions.length > 1 && (
                     <button
                       onClick={() => removeListItem('exclusions', index)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
