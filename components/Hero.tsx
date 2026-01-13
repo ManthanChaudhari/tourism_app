@@ -8,8 +8,10 @@ import { motion } from "framer-motion"
 import { AnimatedCar } from "./animated-car"
 import { AnimatedRoute } from "./animated-route"
 import CompactLocationDialog from "./compact-location-dialog"
+import { useLocation } from "@/lib/contexts/LocationContext"
 
 export default function Hero() {
+  const { selectedLocation: contextLocation, updateLocation, updateDate, updatePassengers } = useLocation()
   const [selectedLocation, setSelectedLocation] = useState("")
   const [selectedLocationObj, setSelectedLocationObj] = useState(null)
   const [selectedDate, setSelectedDate] = useState("")
@@ -119,6 +121,8 @@ export default function Hero() {
   const handleLocationSelect = (location) => {
     setSelectedLocationObj(location);
     setSelectedLocation(getLocationDisplayName(location));
+    // Update the global location context
+    updateLocation(location);
     setIsLocationDialogOpen(false);
     // Automatically open the date dialog (step 2) after location selection
     setCurrentStep(2);
@@ -134,10 +138,14 @@ export default function Hero() {
     const date = new Date(currentYear, currentMonth, day)
     setSelectedDateObj(date)
     setSelectedDate(formatDate(date))
+    // Update the global date context
+    updateDate(date)
     setCurrentStep(3)
   }
 
   const handlePassengerDone = () => {
+    // Update the global passengers context
+    updatePassengers({ adults, children })
     setIsDialogOpen(false)
     setCurrentStep(1)
   }

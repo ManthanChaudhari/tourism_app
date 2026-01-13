@@ -4,23 +4,35 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useLocation } from "@/lib/contexts/LocationContext"
 
 export default function Destinations() {
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { selectedLocation } = useLocation()
 
   useEffect(() => {
     fetchPackages()
-  }, [])
+  }, [selectedLocation])
 
   const fetchPackages = async () => {
     try {
       setLoading(true)
       setError(null)
+
+      const params = new URLSearchParams({
+        limit : 10,
+        sortBy : "created_at",
+        sortOrder : "desc"
+      });
+
+      if (selectedLocation?.id) {
+          params.append('locationId', selectedLocation.id)
+      }
       
       // Fetch published packages from the public API
-      const response = await fetch('/api/packages?public=true&limit=24&sortBy=created_at&sortOrder=desc', {
+      const response = await fetch(`/api/packages?public=true&${params}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

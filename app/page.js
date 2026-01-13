@@ -7,6 +7,7 @@ import WhyTravelWithUs from "@/components/WhyTravelWithUs";
 import AdvertisementBanner from "@/components/AdvertisementBanner";
 import Services from "@/components/Services";
 import Destinations from "@/components/Destinations";
+import PopularPackages from "@/components/PopularPackages";
 import PopularHotels from "@/components/PopularHotels";
 import PopularCars from "@/components/PopularCars";
 import Footer from "@/components/Footer";

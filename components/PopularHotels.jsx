@@ -5,8 +5,10 @@ import { Star, MapPin, Wifi, Car, Coffee, Utensils, Loader2 } from 'lucide-react
 import Link from 'next/link'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useLocation } from '@/lib/contexts/LocationContext'
 
 export default function PopularHotels() {
+  const { selectedLocation } = useLocation()
   const [hotels, setHotels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -16,7 +18,17 @@ export default function PopularHotels() {
     const fetchHotels = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/hotels?limit=9&sortBy=created_at&sortOrder=desc')
+        const params = new URLSearchParams({
+          limit: '9',
+          featured: 'true'
+        })
+
+        // Add location filter if a location is selected
+        if (selectedLocation?.id) {
+          params.append('locationId', selectedLocation.id)
+        }
+
+        const response = await fetch(`/api/hotels?${params}`)
         const data = await response.json()
         
         if (data.success) {
@@ -33,7 +45,15 @@ export default function PopularHotels() {
     }
 
     fetchHotels()
-  }, [])
+  }, [selectedLocation])
+
+  const getLocationDisplayName = (location) => {
+    if (!location) return '';
+    if (location.type === 'city' && location.parent) {
+      return `${location.name}, ${location.parent.name}`;
+    }
+    return location.name;
+  };
 
   const getAmenityIcon = (amenity) => {
     if (amenity.toLowerCase().includes('wifi')) return <Wifi className="h-3 w-3" />
@@ -59,8 +79,10 @@ export default function PopularHotels() {
       <section className="pb-12 relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 relative">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Popular Hotels</h2>
-            <Link href="/hotels">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {selectedLocation ? `Hotels in ${getLocationDisplayName(selectedLocation)}` : 'Popular Hotels'}
+            </h2>
+            <Link href={selectedLocation ? `/hotels?location=${selectedLocation.id}` : "/hotels"}>
               <Button className="text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white px-6 py-2 rounded-full font-medium transition-all duration-300 hover:shadow-lg border-2 bg-transparent">
                 Explore All
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +91,13 @@ export default function PopularHotels() {
               </Button>
             </Link>
           </div>
+          
+          {selectedLocation && (
+            <div className="mb-6 inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+              <MapPin className="h-4 w-4 mr-2" />
+              Filtered by: {getLocationDisplayName(selectedLocation)}
+            </div>
+          )}
           
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
