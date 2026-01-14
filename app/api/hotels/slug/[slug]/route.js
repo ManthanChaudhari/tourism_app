@@ -66,14 +66,14 @@ export async function GET(request, { params }) {
     const processedHotel = {
       ...hotel,
       // Calculate minimum room price
-      minPrice: hotel.rooms && hotel.rooms.length > 0 
+      minPrice: hotel.rooms && hotel.rooms.length > 0
         ? Math.min(...hotel.rooms.filter(room => room.price_per_night > 0).map(room => room.price_per_night))
         : null,
       // Format destination name
-      location: hotel.destination 
-        ? (hotel.destination.type === 'city' && hotel.destination.parent 
-            ? `${hotel.destination.name}, ${hotel.destination.parent.name}`
-            : hotel.destination.name)
+      location: hotel.destination
+        ? (hotel.destination.type === 'city' && hotel.destination.parent
+          ? `${hotel.destination.name}, ${hotel.destination.parent.name}`
+          : hotel.destination.name)
         : null
     }
 

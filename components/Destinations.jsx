@@ -172,10 +172,10 @@ export default function Destinations() {
             <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
               {getPackagesForDisplay().map((destination) => (
                 <Link key={destination.id} href={`/packages/${destination.slug || destination.id}`}>
-                  <Card className="group overflow-hidden flex-shrink-0 w-80 h-[380px] cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl">
+                  <Card className="group overflow-hidden shrink-0 w-80 h-[380px] cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl">
                     <CardContent className="p-0 relative h-full flex flex-col">
                       {/* Image Section */}
-                      <div className="relative h-64 overflow-hidden rounded-t-2xl flex-shrink-0">
+                      <div className="relative h-64 overflow-hidden rounded-t-2xl shrink-0">
                         <img
                           src={destination.image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"}
                           alt={destination.title}

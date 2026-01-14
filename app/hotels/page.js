@@ -324,7 +324,7 @@ export default function HotelsPage() {
                   <Link key={hotel.id} href={`/hotels/${hotel.id}`}>
                     <Card className="group overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full">
                       <CardContent className="p-0 relative h-full flex flex-col">
-                        <div className="relative h-48 overflow-hidden flex-shrink-0">
+                        <div className="relative h-48 overflow-hidden shrink-0">
                           <img
                             src={hotel.image}
                             alt={hotel.name}
@@ -344,13 +344,13 @@ export default function HotelsPage() {
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-sm font-semibold text-gray-900">{hotel.rating}</span>
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
 
-                        <div className="p-4 bg-gradient-to-br from-white to-gray-50 group-hover:from-orange-50 group-hover:to-white transition-all duration-500 flex-1 flex flex-col">
+                        <div className="p-4 bg-linear-to-br from-white to-gray-50 group-hover:from-orange-50 group-hover:to-white transition-all duration-500 flex-1 flex flex-col">
                           <div className="flex-1 min-h-0">
                             <div className="flex items-center gap-2 text-gray-600 mb-2">
-                              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
                                 <MapPin className="w-3 h-3 text-orange-600" />
                               </div>
                               <span className="text-sm font-semibold truncate">{hotel.location}</span>
@@ -405,7 +405,7 @@ export default function HotelsPage() {
                               </div>
                               <span className="text-xs text-gray-600">({reviewsCount})</span>
                             </div>
-                            <div className="text-right flex-shrink-0">
+                            <div className="text-right shrink-0">
                               {hotel.originalPrice && hotel.price && hotel.price !== hotel.originalPrice ? (
                                 <div className="flex flex-col items-end">
                                   <span className="text-xs text-gray-500 line-through">₹{Math.round(hotel.originalPrice).toLocaleString()}</span>
