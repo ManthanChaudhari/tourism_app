@@ -202,11 +202,6 @@ export default function PopularHotels() {
                               <span>Best Price Guarantee</span>
                             </div>
                           )}
-                          
-                          {/* Watermark text overlay */}
-                          <div className="absolute bottom-4 left-4 text-white text-sm font-medium opacity-80">
-                            saltstayz group of hotels
-                          </div>
                         </div>
 
                         {/* Bottom Info Section */}

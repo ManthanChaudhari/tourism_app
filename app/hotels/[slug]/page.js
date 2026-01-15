@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useUser } from '@/lib/supabase/hooks'
 import {
   Star,
   MapPin,
@@ -33,7 +34,15 @@ import {
   Twitter,
   Linkedin,
   Link as LinkIcon,
-  Heart
+  Wind,
+  Droplets,
+  Sparkles,
+  Tv,
+  Waves,
+  ChefHat,
+  Dumbbell,
+  Building,
+  Image as ImageIcon
 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent } from "@/components/ui/card"
@@ -42,6 +51,7 @@ import { Button } from "@/components/ui/button"
 export default function HotelDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { user } = useUser()
   const hotelSlug = params.slug
 
   const [hotel, setHotel] = useState(null)
@@ -64,7 +74,6 @@ export default function HotelDetailPage() {
   const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isLinkCopied, setIsLinkCopied] = useState(false)
-  const [isLiked, setIsLiked] = useState(false)
 
   // Fetch hotel details by slug
   useEffect(() => {
@@ -101,15 +110,23 @@ export default function HotelDetailPage() {
     }
   }, [checkIn])
 
+
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity.toLowerCase()
-    if (amenityLower.includes('wifi')) return <Wifi className="h-4 w-4" />
-    if (amenityLower.includes('parking') || amenityLower.includes('car')) return <Car className="h-4 w-4" />
-    if (amenityLower.includes('restaurant') || amenityLower.includes('dining') || amenityLower.includes('cuisine')) return <Utensils className="h-4 w-4" />
-    if (amenityLower.includes('pool')) return <div className="h-4 w-4 bg-blue-500 rounded-full"></div>
-    if (amenityLower.includes('gym') || amenityLower.includes('fitness')) return <div className="h-4 w-4 bg-green-500 rounded-sm"></div>
-    if (amenityLower.includes('spa')) return <div className="h-4 w-4 bg-purple-500 rounded-full"></div>
-    return <Coffee className="h-4 w-4" />
+    if (amenityLower.includes('wifi')) return <Wifi className="h-5 w-5" />
+    if (amenityLower.includes('parking') || amenityLower.includes('car')) return <Car className="h-5 w-5" />
+    if (amenityLower.includes('restaurant') || amenityLower.includes('dining')) return <Utensils className="h-5 w-5" />
+    if (amenityLower.includes('pool') || amenityLower.includes('waves')) return <Waves className="h-5 w-5" />
+    if (amenityLower.includes('gym') || amenityLower.includes('fitness')) return <Dumbbell className="h-5 w-5" />
+    if (amenityLower.includes('tv') || amenityLower.includes('entertainment')) return <Tv className="h-5 w-5" />
+    if (amenityLower.includes('shampoo') || amenityLower.includes('conditioner') || amenityLower.includes('soap')) return <Droplets className="h-5 w-5" />
+    if (amenityLower.includes('clean') || amenityLower.includes('sparkl')) return <Sparkles className="h-5 w-5" />
+    if (amenityLower.includes('view') || amenityLower.includes('skyline')) return <Building className="h-5 w-5" />
+    if (amenityLower.includes('hair dryer') || amenityLower.includes('air')) return <Wind className="h-5 w-5" />
+    if (amenityLower.includes('safe') || amenityLower.includes('security')) return <Shield className="h-5 w-5" />
+    if (amenityLower.includes('kitchen') || amenityLower.includes('food')) return <ChefHat className="h-5 w-5" />
+    if (amenityLower.includes('bed') || amenityLower.includes('bedroom')) return <Bed className="h-5 w-5" />
+    return <Coffee className="h-5 w-5" />
   }
 
   const generateReviewsCount = (rating) => {
@@ -254,15 +271,6 @@ export default function HotelDetailPage() {
             >
               <Share2 className="h-4 w-4 mr-2" strokeWidth={2} />
               Share
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsLiked(!isLiked)}
-              className={`border-gray-300 ${isLiked ? 'text-red-500 bg-red-50' : 'text-gray-700'} hover:bg-gray-50 h-9`}
-            >
-              <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} strokeWidth={2} />
-              {isLiked ? 'Saved' : 'Save'}
             </Button>
           </div>
         </div>
@@ -461,22 +469,6 @@ export default function HotelDetailPage() {
               </div>
             </div>
 
-            {/* Host Section */}
-            <div className="flex items-center gap-4 border-b pb-8 pt-2">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-100 shadow-sm">
-                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" alt="Host" className="w-full h-full object-cover" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full p-1 border-2 border-white">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                </div>
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Hosted by {hotel.contact_person || hotel.name?.split(' ')[0] || 'Host'}</div>
-                <div className="text-gray-500 text-sm">{isSuperhost && 'Superhost · '}{yearsHosting} {yearsHosting === 1 ? 'year' : 'years'} hosting</div>
-              </div>
-            </div>
-
             {/* Highlights Section */}
             <div className="space-y-6 border-b pb-8">
               {hotel.check_in_time && (
@@ -654,51 +646,45 @@ export default function HotelDetailPage() {
 
       {/* Amenities Modal */}
       {isAmenitiesModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-20">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsAmenitiesModalOpen(false)}
           ></div>
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200 text-left"
+            style={{ fontFamily: 'Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif' }}
+          >
             {/* Modal Header */}
-            <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="p-6 sticky top-0 bg-white z-10 flex items-center">
               <button
                 onClick={() => setIsAmenitiesModalOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close"
               >
-                <X className="h-6 w-6 text-gray-900" />
+                <X className="h-5 w-5 text-gray-900" />
               </button>
-              <h2 className="text-xl font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Amenities</h2>
-              <div className="w-10"></div> {/* Spacer for symmetry */}
             </div>
 
             {/* Modal Body */}
-            <div className="p-8 overflow-y-auto">
-              <div className="space-y-10">
-                {/* Property highlights category */}
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-8 px-2">What this place offers</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                    {(hotel.amenities || []).map((amenity, i) => (
-                      <div key={i} className="flex items-center gap-5 px-2 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 rounded-xl transition-colors group">
-                        <div className="text-gray-900 bg-gray-100 p-3 rounded-full group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
-                          {getAmenityIcon(amenity)}
-                        </div>
-                        <span className="text-gray-700 text-lg font-medium">{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            <div className="px-8 pb-8 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <h2 className="text-2xl font-[540] text-gray-900 mb-8">What this place offers</h2>
 
-                {/* Optional: Add more details if needed */}
-                <div className="pt-6 border-t px-2 text-sm text-gray-500">
-                  <p>Check the listing for additional details about these amenities.</p>
-                </div>
+              <div className="border-t border-gray-200">
+                {(hotel.amenities || []).map((amenity, i) => (
+                  <div key={i} className="flex items-center gap-6 py-6 border-b border-gray-200">
+                    <div className="text-gray-900 shrink-0">
+                      {getAmenityIcon(amenity)}
+                    </div>
+                    <span className="text-[17px] font-normal text-gray-700">{amenity}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       )}
+
       {/* Share Modal */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -762,13 +748,17 @@ export default function HotelDetailPage() {
                 <div className="flex flex-col items-center gap-2 group cursor-pointer">
                   <div className="relative">
                     <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-lg font-semibold text-gray-600 border-2 border-white shadow-sm">
-                      SK
+                      {user?.user_metadata?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || user?.email?.[0].toUpperCase() || 'U'}
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm border border-gray-100">
-                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">M</div>
+                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                        {user?.user_metadata?.full_name?.[0].toUpperCase() || user?.email?.[0].toUpperCase() || 'M'}
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">Sakshi Karkera<br />(You)</span>
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}<br />(You)
+                  </span>
                 </div>
               </div>
 
