@@ -10,7 +10,7 @@ export async function GET(request) {
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const category = searchParams.get('category');
-    const location = searchParams.get('location');
+    const location = searchParams.get('locationId');
     const search = searchParams.get('search');
 
     let query = supabase

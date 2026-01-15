@@ -199,6 +199,7 @@ export async function GET(request) {
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
     const publicAccess = searchParams.get('public') === 'true'
+    const location = searchParams.get('locationId');
 
     // For public access, we don't require authentication
     if (!publicAccess) {
@@ -270,6 +271,10 @@ export async function GET(request) {
     // Apply search filter
     if (search) {
       query = query.or(`title.ilike.%${search}%,destination.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    if(location){
+      query = query.eq('destination', location)
     }
 
     // Apply category filter

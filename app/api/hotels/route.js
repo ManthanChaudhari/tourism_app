@@ -11,10 +11,10 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page')) || 1
     const limit = parseInt(searchParams.get('limit')) || 12
     const search = searchParams.get('search')
-    const destination = searchParams.get('destination')
     const rating = searchParams.get('rating')
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const location = searchParams.get('locationId');
     
     // Calculate offset for pagination
     const offset = (page - 1) * limit
@@ -51,8 +51,8 @@ export async function GET(request) {
       query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%,short_description.ilike.%${search}%`)
     }
 
-    if (destination) {
-      query = query.eq('destination_id', destination)
+    if(location){
+      query = query.eq('destination_id', location);
     }
 
     if (rating) {
