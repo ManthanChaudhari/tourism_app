@@ -11,7 +11,6 @@ export default function CompactLocationDialog({
   title = "Select Location" 
 }) {
   const [locations, setLocations] = useState([]);
-  const [filteredLocations, setFilteredLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelectedLocation, setLocalSelectedLocation] = useState(selectedLocation);
@@ -28,17 +27,17 @@ export default function CompactLocationDialog({
     }
   }, [isOpen, selectedLocation]);
 
-  useEffect(() => {
-    filterLocations();
-  }, [locations, searchTerm]);
-
-  const fetchLocations = async () => {
+  const fetchLocations = async (searchQuery) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
         limit: '100',
         includeInactive: 'false'
       });
+
+      if(searchQuery){
+        params.append("search" , searchQuery);
+      }
 
       const response = await fetch(`/api/locations?${params}`);
       
@@ -55,21 +54,6 @@ export default function CompactLocationDialog({
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterLocations = () => {
-    let filtered = [...locations];
-
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(location => 
-        location.name.toLowerCase().includes(search) ||
-        (location.parent?.name && location.parent.name.toLowerCase().includes(search))
-      );
-    }
-
-    setFilteredLocations(filtered);
   };
 
   const handleLocationSelect = (location) => {
@@ -140,7 +124,7 @@ export default function CompactLocationDialog({
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               <span className="ml-3 text-gray-600">Loading locations...</span>
             </div>
-          ) : filteredLocations.length === 0 ? (
+          ) : locations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-500">
               <MapPin className="h-12 w-12 mb-4 text-gray-300" />
               <p className="text-lg font-medium">No locations found</p>
@@ -148,7 +132,7 @@ export default function CompactLocationDialog({
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {filteredLocations.map((location) => (
+              {locations.map((location) => (
                 <button
                   key={location.id}
                   onClick={() => handleLocationSelect(location)}
@@ -188,7 +172,7 @@ export default function CompactLocationDialog({
                 {localSelectedLocation.type === 'city' && localSelectedLocation.parent && `, ${localSelectedLocation.parent.name}`}
               </span>
             ) : (
-              <span>{filteredLocations.length} location{filteredLocations.length !== 1 ? 's' : ''} available</span>
+              <span>{locations.length} location{locations.length !== 1 ? 's' : ''} available</span>
             )}
           </div>
           <div className="flex space-x-3">
