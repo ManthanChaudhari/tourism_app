@@ -4,35 +4,23 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useLocation } from "@/lib/contexts/LocationContext"
 
 export default function Destinations() {
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { selectedLocation } = useLocation()
 
   useEffect(() => {
     fetchPackages()
-  }, [selectedLocation])
+  }, [])
 
   const fetchPackages = async () => {
     try {
       setLoading(true)
       setError(null)
-
-      const params = new URLSearchParams({
-        limit : 10,
-        sortBy : "created_at",
-        sortOrder : "desc"
-      });
-
-      if (selectedLocation?.id) {
-          params.append('locationId', selectedLocation.id)
-      }
       
       // Fetch published packages from the public API
-      const response = await fetch(`/api/packages?public=true&${params}`, {
+      const response = await fetch('/api/packages?public=true&limit=24&sortBy=created_at&sortOrder=desc', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -184,9 +172,10 @@ export default function Destinations() {
             <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
               {getPackagesForDisplay().map((destination) => (
                 <Link key={destination.id} href={`/packages/${destination.slug || destination.id}`}>
-                  <Card className="group overflow-hidden flex-shrink-0 w-72 h-96 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <Card className="group overflow-hidden shrink-0 w-80 h-[380px] cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl">
                     <CardContent className="p-0 relative h-full flex flex-col">
-                      <div className="relative h-48 overflow-hidden flex-shrink-0">
+                      {/* Image Section */}
+                      <div className="relative h-64 overflow-hidden rounded-t-2xl shrink-0">
                         <img
                           src={destination.image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"}
                           alt={destination.title}
@@ -195,57 +184,40 @@ export default function Destinations() {
                             e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"
                           }}
                         />
+                        
+                        {/* Discount Badge */}
                         {destination.discount && (
-                          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                          <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-lg">
                             -{destination.discount}%
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        {/* Location Badge */}
+                        <div className="absolute bottom-4 left-2 backdrop-blur-sm bg-white/20 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1 shadow-lg">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                          <span>{destination.location || destination.destination || destination.city || 'India'}</span>
+                        </div>
                       </div>
 
-                      <div className="p-4 bg-gradient-to-br from-white to-gray-50 group-hover:from-orange-50 group-hover:to-white transition-all duration-500 flex-1 flex flex-col">
-                        <div className="flex-1 min-h-0">
-                          <div className="flex items-center gap-2 text-gray-600 mb-3">
-                            <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <svg className="w-3 h-3 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                  fillRule="evenodd"
-                                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-semibold truncate">{destination.destination}</span>
-                          </div>
-                          <h3 className="text-base font-bold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors duration-300 leading-tight overflow-hidden" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', minHeight: '2.5rem'}}>
+                      {/* Bottom Content Section */}
+                      <div className="p-4 bg-white flex-1 flex flex-col ">
+                        {/* Title */}
+                        <div className="mb-3">
+                          <h3 className="text-xl font-bold text-gray-900 leading-tight">
                             {destination.title}
                           </h3>
                         </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-200 mt-auto">
-                          <div className="flex items-center gap-1 text-gray-700">
-                            <svg
-                              className="w-4 h-4 text-orange-500 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span className="text-sm font-semibold">{destination.duration}</span>
-                          </div>
-                          <div className="text-right">
+                        
+                        {/* Starting from and Price */}
+                        <div>
+                          <p className="text-base text-gray-500 ">Starting from</p>
+                          <div className="text-2xl font-bold text-gray-900">
                             {destination.discount ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-xs text-gray-500 line-through">${destination.originalPrice}</span>
-                                <span className="text-base font-bold text-orange-600">${destination.discountedPrice}</span>
-                              </div>
+                              <span>₹ {destination.discountedPrice || destination.price}</span>
                             ) : (
-                              <span className="text-base font-bold text-orange-600">${destination.price}</span>
+                              <span>₹ {destination.price}</span>
                             )}
                           </div>
                         </div>
