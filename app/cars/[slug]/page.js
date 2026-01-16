@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  Star, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Users, 
+import {
+  Star,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Users,
   ArrowLeft,
   Fuel,
   Settings,
@@ -21,7 +21,19 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Luggage
+  Luggage,
+  Share2,
+  Heart,
+  Gauge,
+  History,
+  Info,
+  CheckCircle2,
+  CircleDot,
+  MessageSquare,
+  Camera,
+  Wind,
+  Map,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent } from "@/components/ui/card"
@@ -31,11 +43,33 @@ export default function CarDetailPage() {
   const params = useParams()
   const router = useRouter()
   const carSlug = params.slug
-  
+
   const [car, setCar] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [showStickyHeader, setShowStickyHeader] = useState(false)
+  const [paymentType, setPaymentType] = useState('cash') // 'cash' or 'finance'
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('photos') // 'photos' or 'video'
+  const [isFavorited, setIsFavorited] = useState(false)
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${car?.brand} ${car?.model} | Rental`,
+          text: `Check out this ${car?.brand} ${car?.model} available for rent!`,
+          url: window.location.href,
+        })
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        alert('Link copied to clipboard!')
+      }
+    } catch (error) {
+      console.error('Error sharing:', error)
+    }
+  }
 
   // Fetch car details by slug
   useEffect(() => {
@@ -44,7 +78,7 @@ export default function CarDetailPage() {
         setLoading(true)
         const response = await fetch(`/api/cars/slug/${carSlug}?public=true`)
         const data = await response.json()
-        
+
         if (data.success) {
           setCar(data.car)
         } else {
@@ -63,6 +97,19 @@ export default function CarDetailPage() {
     }
   }, [carSlug])
 
+  // Handle sticky header visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowStickyHeader(true)
+      } else {
+        setShowStickyHeader(false)
+      }
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const getAllImages = () => {
     const images = []
     if (car?.thumbnail_image) images.push(car.thumbnail_image)
@@ -72,26 +119,12 @@ export default function CarDetailPage() {
     return images.length > 0 ? images : ['https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&h=600&fit=crop']
   }
 
-  const nextImage = () => {
-    const images = getAllImages()
-    setSelectedImageIndex((prev) => (prev + 1) % images.length)
-  }
-
-  const prevImage = () => {
-    const images = getAllImages()
-    setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-orange-600 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">Loading car details...</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-orange-600 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading your ride...</p>
         </div>
       </div>
     )
@@ -99,24 +132,22 @@ export default function CarDetailPage() {
 
   if (error || !car) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Car Not Found</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <div className="flex items-center justify-center gap-4">
-              <Button onClick={() => router.back()} variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Go Back
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center bg-white p-8 rounded-2xl shadow-sm border">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Car Not Found</h1>
+          <p className="text-gray-600 mb-8">{error}</p>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => router.back()} variant="outline" className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+            <Link href="/" className="w-full">
+              <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
+                <Home className="h-4 w-4 mr-2" />
+                Go Home
               </Button>
-              <Link href="/">
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">
-                  <Home className="h-4 w-4 mr-2" />
-                  Go Home
-                </Button>
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -124,392 +155,604 @@ export default function CarDetailPage() {
   }
 
   const images = getAllImages()
+  const dailyPrice = Math.round(car.price_per_day || 0)
+  const hourlyPrice = Math.round(car.price_per_hour || 0)
+  const driverCharge = Math.round(car.driver_charge_per_day || 0)
+  const extraKmPrice = Math.round(car.extra_km_price || 0)
+  const securityDeposit = Math.round(car.security_deposit || 0)
+
+  // Decide what to show as the primary price in headers
+  const displayPrice = paymentType === 'cash' ? dailyPrice : hourlyPrice
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-[#F0F2F5]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+      {/* Sticky Header */}
+      <div className={`fixed top-0 left-0 right-0 bg-white shadow-md z-50 transition-transform duration-300 ${showStickyHeader ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button 
-              onClick={() => router.back()} 
-              variant="outline" 
-              size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+            <div className="hidden md:block">
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">{car.is_used ? 'Used' : 'New'} {car.year}</p>
+              <h2 className="text-sm font-bold text-gray-900 truncate max-w-[200px]">{car.brand} {car.model} {car.name}</h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">Starting from</p>
+              <p className="text-lg font-bold text-orange-600">₹{dailyPrice.toLocaleString()}<span className="text-xs text-gray-400 font-medium ml-1">/day</span></p>
+            </div>
+            <Button className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6">
+              Book Now
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{car.name}</h1>
-              <div className="flex items-center gap-2 text-gray-600 mt-1">
-                <MapPin className="h-4 w-4" />
-                <span>{car.location}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Navigation Row */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 h-12 flex items-center gap-6 text-sm font-medium text-gray-600">
+          <button onClick={() => router.back()} className="flex items-center gap-2 hover:text-orange-600 transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Search
+          </button>
+          {/* <div className="h-4 w-px bg-gray-300"></div>
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+            <span className="text-orange-600 border-b-2 border-orange-600 py-3">Overview</span>
+            <span className="hover:text-orange-600 py-3 cursor-pointer">Pricing</span>
+            <span className="hover:text-orange-600 py-3 cursor-pointer">Specs</span>
+            <span className="hover:text-orange-600 py-3 cursor-pointer">Reviews</span>
+            <span className="hover:text-orange-600 py-3 cursor-pointer">Dealer Info</span>
+          </div>*/}
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Layout Container */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* LEFT COLUMN (Primary Content) */}
+          <div className="lg:col-span-8 space-y-6">
+
+            {/* Image Gallery - Exact AutoTrader Style */}
+            <div className="space-y-3">
+              {/* Image Gallery */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-2 h-[300px] md:h-[450px] relative rounded-xl overflow-hidden group">
+                {/* Main Large Image */}
+                <div
+                  className="md:col-span-2 relative bg-gray-100 flex items-center justify-center cursor-pointer"
+                  onClick={() => setIsLightboxOpen(true)}
+                >
+                  <img
+                    src={images[selectedImageIndex]}
+                    alt={`${car.brand} ${car.model}`}
+                    className="w-full h-full object-contain"
+                  />
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedImageIndex(prev => prev > 0 ? prev - 1 : images.length - 1)
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedImageIndex(prev => prev < images.length - 1 ? prev + 1 : 0)
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+
+                </div>
+
+                {/* Right Stacked Images */}
+                <div className="hidden md:flex flex-col gap-1 md:gap-2 h-full">
+                  {/* Slot 1: index 1 */}
+                  <div
+                    className="flex-1 overflow-hidden relative bg-gray-100 flex items-center justify-center cursor-pointer"
+                    onClick={() => setIsLightboxOpen(true)}
+                  >
+                    {images[1] ? (
+                      <img src={images[1]} className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-400 gap-2">
+                        <Camera size={32} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Slot 2: index 2 or placeholder */}
+                  <div
+                    className="flex-1 overflow-hidden relative bg-gray-100 flex items-center justify-center cursor-pointer"
+                    onClick={() => setIsLightboxOpen(true)}
+                  >
+                    {images[2] ? (
+                      <>
+                        <img src={images[2]} className="w-full h-full object-contain" />
+                        {images.length > 3 && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors">
+                            <span className="text-white font-bold text-lg">+{images.length - 2} More</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-400 gap-2 w-full h-full border-2 border-dashed border-gray-200">
+                        <Camera size={32} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+
+              </div>
+
+              {/* Bottom Gallery Controls */}
+              <div className="flex items-center gap-6 px-1">
+                <button className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors">
+                  <Camera size={18} className="text-orange-600" />
+                  {images.length} Photos
+                </button>
+                {(car.video_url || car.video_count > 0) && (
+                  <button className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors">
+                    <div className="w-5 h-5 rounded-full border-2 border-orange-600 flex items-center justify-center">
+                      <div className="w-0 h-0 border-t-[3px] border-t-transparent border-l-[6px] border-l-orange-600 border-b-[3px] border-b-transparent ml-0.5"></div>
+                    </div>
+                    {car.video_count || (car.video_url ? 1 : 0)} Video{(car.video_count > 1) ? 's' : ''}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Vehicle Header Information */}
+            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+              <div className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div className="flex-1">
+                  {car.is_featured && (
+                    <span className="inline-block px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-md mb-3">
+                      Featured
+                    </span>
+                  )}
+                  <h1 className="text-4xl font-extrabold text-[#1A1A1A] leading-tight">
+                    {car.is_used ? 'Used' : 'New'} {car.year} {car.brand} {car.model} {car.name}
+                  </h1>
+                  <div className="flex items-center gap-4 mt-3 text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <MapPin size={16} />
+                      <span className="text-sm font-medium">{car.location || "Location N/A"}</span>
+                    </div>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                    {/* <div className="flex items-center gap-1 font-bold text-orange-600">
+                      <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm">{(car.rating || 4.8).toFixed(1)} ({(car.reviews_count || 120).toLocaleString()} reviews)</span>
+                    </div> */}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={handleShare}
+                    className="w-11 h-11 bg-gray-50 hover:bg-white border border-gray-200 text-gray-700 rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-105 active:scale-95"
+                    title="Share Car"
+                  >
+                    <Share2 size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Key Highlights Row */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-10 py-8 border-y border-gray-100">
+                <div className="space-y-1">
+                  <Gauge className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">Mileage</p>
+                  <p className="text-lg font-semibold text-gray-900">{(car.mileage || 0).toLocaleString()} <span className="text-xs font-medium">mi</span></p>
+                </div>
+                <div className="space-y-1">
+                  <Fuel className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">Fuel Type</p>
+                  <p className="text-lg font-semibold text-gray-900 capitalize">{car.fuel_type}</p>
+                </div>
+                <div className="space-y-1">
+                  <Settings className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">Trans.</p>
+                  <p className="text-lg font-semibold text-gray-900 capitalize">{car.transmission}</p>
+                </div>
+                <div className="space-y-1">
+                  <CircleDot className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">Drive Type</p>
+                  <p className="text-lg font-semibold text-gray-900 capitalize">{car.drive_type || "AWD"}</p>
+                </div>
+                <div className="space-y-1">
+                  <Wind className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">AC</p>
+                  <p className="text-lg font-semibold text-gray-900">{car.ac_available ? 'Available' : 'No'}</p>
+                </div>
+                <div className="space-y-1">
+                  <Map className="text-orange-600 mb-2" size={24} />
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-tight">One Way</p>
+                  <p className="text-lg font-semibold text-gray-900">{car.allow_one_way ? 'Allowed' : 'No'}</p>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 font-primary">Technical Specifications</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
+                  {[
+                    { label: "Engine", value: car.engine },
+                    { label: "Exterior Color", value: car.exterior_color },
+                    { label: "Interior Color", value: car.interior_color },
+                    { label: "Seating", value: car.seating_capacity ? `${car.seating_capacity} Adults` : null },
+                    { label: "Luggage", value: car.luggage_capacity },
+                    { label: "Fuel MPG", value: car.mpg ? `${car.mpg} Combined` : (car.mpg_city ? `${car.mpg_city} City / ${car.mpg_highway} Hwy` : null) },
+                    { label: "Security Deposit", value: car.security_deposit ? `₹${Math.round(car.security_deposit).toLocaleString()}` : null },
+                    { label: "Fuel Policy", value: car.fuel_policy?.replace('-', ' '), class: "capitalize" },
+                  ].filter(spec => spec.value).map((spec, i) => (
+                    <div key={i} className="flex justify-between py-3 border-b border-gray-50">
+                      <span className="text-gray-500 font-medium">{spec.label}</span>
+                      <span className={`text-gray-900 font-bold ${spec.class || ''}`}>{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Consumer Reviews & Ratings */}
+            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-bold text-gray-900">{car.rating_title || "Consumer Ratings"}</h3>
+                {car.rating_logo && (
+                  <img src={car.rating_logo} alt="Rating Source" className="h-8 opacity-50 grayscale hover:grayscale-0 transition-all" />
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 bg-orange-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">{(car.rating || 4.8).toFixed(1)}</div>
+                    <div>
+                      <div className="flex text-yellow-500 mb-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`h-5 w-5 ${i < Math.floor(car.rating || 4.8) ? 'fill-current' : 'text-gray-300'}`} />
+                        ))}
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">Consumer Rating</p>
+                      <p className="text-xs text-gray-500">Based on {(car.reviews_count || 120).toLocaleString()} user submissions</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { label: "Reliability", rating: car.rating_reliability || 4.9 },
+                      { label: "Comfort", rating: car.rating_comfort || 4.7 },
+                      { label: "Value", rating: car.rating_value || 4.8 },
+                      { label: "Performance", rating: car.rating_performance || 4.6 }
+                    ].map((item, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-gray-600">
+                          <span>{item.label}</span>
+                          <span>{item.rating} / 5.0</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-orange-600 rounded-full transition-all duration-1000" style={{ width: `${(item.rating / 5) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="p-6 bg-orange-50 rounded-2xl border border-orange-100">
+                    <div className="flex items-start gap-3 mb-4">
+                      <History className="text-orange-600 mt-1" size={20} />
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm">Vehicle History</h4>
+                        <p className="text-xs text-gray-700 leading-relaxed mt-1">
+                          {car.history_summary || `This vehicle is a ${car.is_certified ? 'Certified Pre-Owned' : 'verified'} car with ${car.previous_owners || 'limited'} previous owner(s) and zero reported accidents. Fully serviced and inspected by authorized technicians.`}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full bg-white border-orange-200 text-orange-700 hover:bg-orange-50 font-bold text-xs h-9">
+                      {car.carfax_available ? 'View Free Carfax Report' : 'Request Vehicle History'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {car.premium_features?.length > 0 && (
+              <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Premium Features</h3>
+                <div className="flex flex-wrap gap-3">
+                  {car.premium_features.map((feature, i) => (
+                    <span key={i} className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-green-600" />
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN (Sidebar) */}
+          <div className="lg:col-span-4 space-y-6">
+
+            {/* Pricing Card - Rental Version */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className="p-1 bg-gray-50 border-b flex">
+                <button
+                  onClick={() => setPaymentType('cash')}
+                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${paymentType === 'cash' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Daily
+                </button>
+                <button
+                  onClick={() => setPaymentType('finance')}
+                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${paymentType === 'finance' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Hourly
+                </button>
+              </div>
+
+              <div className="p-8">
+                {car.driver_included ? (
+                  <div className="flex items-center gap-2 text-green-700 font-bold text-sm mb-4">
+                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle2 size={12} />
+                    </div>
+                    Professional Driver Included
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-orange-700 font-bold text-sm mb-4">
+                    <div className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center">
+                      <CircleDot size={12} />
+                    </div>
+                    Self-Drive Choice
+                  </div>
+                )}
+
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-gray-900 tracking-tight">
+                      ₹{displayPrice.toLocaleString()}
+                    </span>
+                    <span className="text-gray-500 font-bold text-lg">/{paymentType === 'cash' ? 'day' : 'hr'}</span>
+                  </div>
+                  {paymentType === 'cash' ? (
+                    <p className="text-xs text-gray-500 font-medium mt-1">Minimum {car.min_booking_days || 1} day booking required</p>
+                  ) : (
+                    <p className="text-xs text-gray-500 font-medium mt-1">Minimum {car.min_booking_hours || 4} hours booking required</p>
+                  )}
+                </div>
+
+                {/* Rental Details Breakdown */}
+                <div className="space-y-3 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gray-500">Security Deposit</span>
+                    <span className="text-gray-900">₹{securityDeposit.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gray-500">Extra KM Charge</span>
+                    <span className="text-gray-900 text-orange-600">₹{extraKmPrice}/km</span>
+                  </div>
+                  {!car.driver_included && driverCharge > 0 && (
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-500">Optional Driver</span>
+                      <span className="text-gray-900">₹{driverCharge}/day</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-base font-bold shadow-xl h-14 uppercase tracking-wider">
+                    Book This Car
+                  </Button>
+                  <Button variant="outline" className="w-full border-orange-600 text-orange-600 py-6 text-sm font-bold h-12">
+                    Check Availability
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-[#FAFBFB] p-4 text-center border-t border-gray-100">
+                <button className="text-xs font-bold text-orange-600 hover:underline flex items-center justify-center gap-1 mx-auto">
+                  <Info size={14} /> View Detailed Pricing Terms
+                </button>
+              </div>
+            </div>
+
+            {/* Sticky Sidebar Container */}
+            <div className="sticky top-24 space-y-6 self-start">
+              {/* Dealer Contact Card */}
+              <div className="bg-[#1A1A1A] rounded-xl p-8 shadow-sm text-white">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">Contact Dealer</h4>
+                    <p className="text-lg font-bold">{car.dealer_name || "Premium Rental Motors"}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                    <MapPin className="text-white" />
+                  </div>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  {car.dealer_phone && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                        <Phone size={16} className="text-orange-400" />
+                      </div>
+                      <p className="text-sm font-bold text-white tracking-widest">{car.dealer_phone}</p>
+                    </div>
+                  )}
+                  {car.dealer_email && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                        <Mail size={16} className="text-orange-400" />
+                      </div>
+                      <p className="text-sm font-medium text-white/80">{car.dealer_email}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    className="w-full bg-white/10 border-white/20 rounded-lg px-4 py-3 text-sm focus:bg-white focus:text-gray-900 transition-all placeholder:text-white/40 outline-none"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Your Email"
+                    className="w-full bg-white/10 border-white/20 rounded-lg px-4 py-3 text-sm focus:bg-white focus:text-gray-900 transition-all placeholder:text-white/40 outline-none"
+                  />
+                  <textarea
+                    rows="3"
+                    placeholder="Message the dealer..."
+                    className="w-full bg-white/10 border-white/20 rounded-lg px-4 py-3 text-sm focus:bg-white focus:text-gray-900 transition-all placeholder:text-white/40 outline-none resize-none"
+                  ></textarea>
+                  <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 uppercase tracking-widest mt-2 h-12">
+                    Request Info
+                  </Button>
+                </div>
+              </div>
+
+              {/* Cancellation Policy Box */}
+              <div className="bg-orange-50 rounded-xl p-5 border border-orange-100 flex items-start gap-3">
+                <div className="mt-1 shrink-0">
+                  <Shield size={20} className="text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <h5 className="text-sm font-bold text-orange-900">Cancellation Policy</h5>
+                  <p className="text-xs text-orange-800 leading-relaxed mt-1">
+                    {car.cancellation_policy || "Free cancellation up to 24 hours before your scheduled pick-up time. For cancellations within 24 hours, a small fee may apply based on the duration of your booking."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Footer-like Bottom Banner */}
+      <div className="bg-white border-t mt-12 py-12">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          {(car.footer_banners || [
+            { icon: 'shield', title: 'Buyer Protection', description: 'Every vehicle is inspected and comes with a 12-month secure purchase guarantee.' },
+            { icon: 'message', title: 'Expert Support', description: 'Our concierge team is available 24/7 to help you with the buying process.' },
+            { icon: 'calendar', title: 'Easy Scheduling', description: 'Book test drives and inspections directly through our digitized portal.' }
+          ]).map((banner, i) => {
+            const Icon = {
+              shield: Shield,
+              message: MessageSquare,
+              calendar: Calendar
+            }[banner.icon] || Shield
+
+            return (
+              <div key={i} className="space-y-3">
+                <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Icon className="text-orange-600" size={32} />
+                </div>
+                <h4 className="font-bold text-gray-900">{banner.title}</h4>
+                <p className="text-sm text-gray-500 px-8">{banner.description}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 flex items-center justify-between border-b border-gray-100">
+              <div>
+                <h3 className="font-primary font-bold text-gray-900 leading-tight">
+                  {car?.is_used ? 'Used' : 'New'} {car?.year} {car?.brand} {car.name} — ₹{dailyPrice.toLocaleString()}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsLightboxOpen(false)}
+                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all group"
+              >
+                <X size={20} className="text-gray-500 group-hover:text-gray-900 transition-colors" />
+              </button>
+            </div>
+
+            {/* Controls Bar */}
+            <div className="px-6 py-2 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0 z-10">
+              <div className="flex gap-6">
+                <button
+                  onClick={() => setActiveTab('photos')}
+                  className={`py-3 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'photos' ? 'text-orange-600' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Photos
+                  {activeTab === 'photos' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-600 rounded-full" />}
+                </button>
+                <button
+                  onClick={() => setActiveTab('video')}
+                  className={`py-3 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'video' ? 'text-orange-600' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Video
+                  {activeTab === 'video' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-600 rounded-full" />}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:block text-right">
+                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting from</span>
+                  <span className="block text-sm font-black text-orange-600">₹{dailyPrice.toLocaleString()}/day</span>
+                </div>
+                <Button className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-black px-6 h-10 uppercase tracking-widest">
+                  Request Info
+                </Button>
+              </div>
+            </div>
+
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-8 custom-scrollbar">
+              <div className="max-w-2xl mx-auto space-y-6">
+                {activeTab === 'photos' ? (
+                  <>
+                    {images.map((img, i) => (
+                      <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 animate-in slide-in-from-bottom-4 duration-500 delay-[50ms]">
+                        <img
+                          src={img}
+                          className="w-full h-auto object-contain rounded-md"
+                          alt={`Gallery image ${i + 1}`}
+                        />
+                      </div>
+                    ))}
+                    <div className="py-8 text-center">
+                      <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.2em]">End of Photos</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="aspect-video bg-black rounded-xl flex items-center justify-center text-white shadow-xl overflow-hidden ring-1 ring-white/10">
+                    {car.video_url ? (
+                      <iframe
+                        src={car.video_url}
+                        className="w-full h-full"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                          <Camera size={32} className="text-gray-500" />
+                        </div>
+                        <p className="text-gray-400 font-bold tracking-widest uppercase text-xs">No Video Available</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Image Gallery */}
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="relative">
-                  <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={images[selectedImageIndex]}
-                      alt={car.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&h=600&fit=crop"
-                      }}
-                    />
-                    
-                    {/* Navigation Arrows */}
-                    {images.length > 1 && (
-                      <>
-                        <button
-                          onClick={prevImage}
-                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={nextImage}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                      </>
-                    )}
-
-                    {/* Image Counter */}
-                    {images.length > 1 && (
-                      <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                        {selectedImageIndex + 1} / {images.length}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Thumbnail Strip */}
-                  {images.length > 1 && (
-                    <div className="p-4 bg-white">
-                      <div className="flex gap-2 overflow-x-auto">
-                        {images.map((image, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setSelectedImageIndex(index)}
-                            className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                              selectedImageIndex === index 
-                                ? 'border-orange-500' 
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                          >
-                            <img
-                              src={image}
-                              alt={`${car.name} ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Car Information */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{car.name}</h2>
-                    <div className="flex items-center gap-4 mb-4">
-                      <span className="text-lg text-gray-600">{car.brand} {car.model}</span>
-                      <span className="text-lg text-gray-600">• {car.year}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600 mb-4">
-                      <MapPin className="h-5 w-5" />
-                      <span className="text-lg">{car.location}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Starting from</div>
-                    <div className="text-3xl font-bold text-orange-600">₹{Math.round(car.price_per_day).toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">per day</div>
-                    {car.price_per_hour && (
-                      <div className="text-sm text-gray-500 mt-1">₹{Math.round(car.price_per_hour)} per hour</div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Car Specifications */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Users className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                    <div className="text-sm text-gray-600">Seating</div>
-                    <div className="font-semibold">{car.seating_capacity} People</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Fuel className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                    <div className="text-sm text-gray-600">Fuel Type</div>
-                    <div className="font-semibold capitalize">{car.fuel_type}</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Settings className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                    <div className="text-sm text-gray-600">Transmission</div>
-                    <div className="font-semibold capitalize">{car.transmission}</div>
-                  </div>
-                  {car.luggage_capacity && (
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <Luggage className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                      <div className="text-sm text-gray-600">Luggage</div>
-                      <div className="font-semibold">{car.luggage_capacity}</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Features */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Features</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className={`w-2 h-2 rounded-full ${car.ac_available ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                      <span className="text-gray-700">Air Conditioning</span>
-                    </div>
-                    {car.driver_included && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-gray-700">Driver Included</span>
-                      </div>
-                    )}
-                    {car.allow_one_way && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-gray-700">One-Way Rental</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Pricing Details */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between py-2 border-b border-gray-200">
-                        <span className="text-gray-600">Per Day</span>
-                        <span className="font-medium">₹{Math.round(car.price_per_day).toLocaleString()}</span>
-                      </div>
-                      {car.price_per_hour && (
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Per Hour</span>
-                          <span className="font-medium">₹{Math.round(car.price_per_hour).toLocaleString()}</span>
-                        </div>
-                      )}
-                      {car.extra_km_price && (
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Extra KM</span>
-                          <span className="font-medium">₹{Math.round(car.extra_km_price)}/km</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      {car.driver_charge_per_day && (
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Driver Charge</span>
-                          <span className="font-medium">₹{Math.round(car.driver_charge_per_day).toLocaleString()}/day</span>
-                        </div>
-                      )}
-                      {car.security_deposit && (
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Security Deposit</span>
-                          <span className="font-medium">₹{Math.round(car.security_deposit).toLocaleString()}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Policies */}
-            {(car.fuel_policy || car.cancellation_policy) && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Policies & Terms</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {car.fuel_policy && (
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                          <Fuel className="h-4 w-4" />
-                          Fuel Policy
-                        </h4>
-                        <p className="text-gray-700 text-sm leading-relaxed capitalize">{car.fuel_policy.replace('-', ' ')}</p>
-                      </div>
-                    )}
-                    {car.cancellation_policy && (
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                          <CreditCard className="h-4 w-4" />
-                          Cancellation Policy
-                        </h4>
-                        <p className="text-gray-700 text-sm leading-relaxed">{car.cancellation_policy}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Booking Terms */}
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-3">Booking Terms</h4>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      {car.min_booking_hours && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-orange-600" />
-                          <span>Minimum booking: {car.min_booking_hours} hours</span>
-                        </div>
-                      )}
-                      {car.min_booking_days && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-orange-600" />
-                          <span>Minimum booking: {car.min_booking_days} days</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-green-600" />
-                        <span>Valid driving license required</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-blue-600" />
-                        <span>Security deposit refundable</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Info Card */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Info</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Category</span>
-                    <span className="font-medium">{car.category}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Year</span>
-                    <span className="font-medium">{car.year}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Fuel Type</span>
-                    <span className="font-medium capitalize">{car.fuel_type}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Transmission</span>
-                    <span className="font-medium capitalize">{car.transmission}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Booking Card */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Book This Car</h3>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-600">from</div>
-                    <div className="text-xl font-bold text-orange-600">₹{Math.round(car.price_per_day).toLocaleString()}</div>
-                    <div className="text-xs text-gray-600">per day</div>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-6">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="date"
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                          min={new Date().toISOString().split('T')[0]}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="date"
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                          min={new Date().toISOString().split('T')[0]}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Location</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                      <option>{car.location}</option>
-                      <option>Airport Pickup</option>
-                      <option>Hotel Pickup</option>
-                      <option>Custom Location</option>
-                    </select>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 text-lg font-semibold mb-4">
-                  Book Now
-                </Button>
-
-                <div className="space-y-2 text-center text-xs text-gray-500">
-                  <p>✓ Instant confirmation</p>
-                  <p>✓ Free cancellation up to 24 hours</p>
-                  <p>✓ 24/7 roadside assistance</p>
-                </div>
-
-                {/* Contact Options */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3">Need Help?</h4>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left"
-                      onClick={() => window.open('tel:+1234567890')}
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call Support
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left"
-                      onClick={() => window.open('mailto:support@example.com')}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email Support
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
