@@ -52,6 +52,24 @@ export default function CarDetailPage() {
   const [paymentType, setPaymentType] = useState('cash') // 'cash' or 'finance'
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('photos') // 'photos' or 'video'
+  const [isFavorited, setIsFavorited] = useState(false)
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${car?.brand} ${car?.model} | Rental`,
+          text: `Check out this ${car?.brand} ${car?.model} available for rent!`,
+          url: window.location.href,
+        })
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        alert('Link copied to clipboard!')
+      }
+    } catch (error) {
+      console.error('Error sharing:', error)
+    }
+  }
 
   // Fetch car details by slug
   useEffect(() => {
@@ -137,9 +155,14 @@ export default function CarDetailPage() {
   }
 
   const images = getAllImages()
-  const price = Math.round(car.price_per_day)
-  const originalPrice = car.original_price ? Math.round(car.original_price) : Math.round(price * 1.1)
-  const monthlyPayment = car.monthly_emi ? Math.round(car.monthly_emi) : Math.round(price * 0.4)
+  const dailyPrice = Math.round(car.price_per_day || 0)
+  const hourlyPrice = Math.round(car.price_per_hour || 0)
+  const driverCharge = Math.round(car.driver_charge_per_day || 0)
+  const extraKmPrice = Math.round(car.extra_km_price || 0)
+  const securityDeposit = Math.round(car.security_deposit || 0)
+
+  // Decide what to show as the primary price in headers
+  const displayPrice = paymentType === 'cash' ? dailyPrice : hourlyPrice
 
   return (
     <div className="min-h-screen bg-[#F0F2F5]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
@@ -154,11 +177,11 @@ export default function CarDetailPage() {
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <p className="text-xs text-gray-500 line-through">₹{originalPrice.toLocaleString()}</p>
-              <p className="text-lg font-bold text-orange-600">₹{price.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">Starting from</p>
+              <p className="text-lg font-bold text-orange-600">₹{dailyPrice.toLocaleString()}<span className="text-xs text-gray-400 font-medium ml-1">/day</span></p>
             </div>
             <Button className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6">
-              Request Info
+              Book Now
             </Button>
           </div>
         </div>
@@ -171,14 +194,14 @@ export default function CarDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Search
           </button>
-          <div className="h-4 w-px bg-gray-300"></div>
+          {/* <div className="h-4 w-px bg-gray-300"></div>
           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
             <span className="text-orange-600 border-b-2 border-orange-600 py-3">Overview</span>
             <span className="hover:text-orange-600 py-3 cursor-pointer">Pricing</span>
             <span className="hover:text-orange-600 py-3 cursor-pointer">Specs</span>
             <span className="hover:text-orange-600 py-3 cursor-pointer">Reviews</span>
             <span className="hover:text-orange-600 py-3 cursor-pointer">Dealer Info</span>
-          </div>
+          </div>*/}
         </div>
       </div>
 
@@ -224,15 +247,6 @@ export default function CarDetailPage() {
                     <ChevronRight size={24} />
                   </button>
 
-                  {/* Overlaid Action Icons */}
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <button className="w-10 h-10 bg-white/90 hover:bg-white text-gray-900 rounded-full flex items-center justify-center shadow-lg transition-all">
-                      <Share2 size={18} />
-                    </button>
-                    <button className="w-10 h-10 bg-white/90 hover:bg-white text-gray-900 rounded-full flex items-center justify-center shadow-lg transition-all">
-                      <Heart size={18} />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Right Stacked Images */}
@@ -274,21 +288,7 @@ export default function CarDetailPage() {
                   </div>
                 </div>
 
-                {/* Gallery-wide Navigation Arrows */}
-                <div className="absolute inset-y-0 -left-5 -right-5 flex items-center justify-between pointer-events-none px-4 md:px-0">
-                  <button
-                    onClick={() => setSelectedImageIndex(prev => (prev - 1 + images.length) % images.length)}
-                    className="p-3 bg-white hover:bg-orange-50 rounded-full shadow-xl pointer-events-auto border border-gray-100 transition-all transform hover:scale-110 active:scale-95 group/btn"
-                  >
-                    <ChevronLeft size={24} className="text-gray-800 group-hover/btn:text-orange-600" />
-                  </button>
-                  <button
-                    onClick={() => setSelectedImageIndex(prev => (prev + 1) % images.length)}
-                    className="p-3 bg-white hover:bg-orange-50 rounded-full shadow-xl pointer-events-auto border border-gray-100 transition-all transform hover:scale-110 active:scale-95 group/btn"
-                  >
-                    <ChevronRight size={24} className="text-gray-800 group-hover/btn:text-orange-600" />
-                  </button>
-                </div>
+
               </div>
 
               {/* Bottom Gallery Controls */}
@@ -310,25 +310,37 @@ export default function CarDetailPage() {
 
             {/* Vehicle Header Information */}
             <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
-              <div className="mb-6">
-                {car.is_featured && (
-                  <span className="inline-block px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-md mb-3">
-                    Featured
-                  </span>
-                )}
-                <h1 className="text-4xl font-extrabold text-[#1A1A1A] leading-tight">
-                  {car.is_used ? 'Used' : 'New'} {car.year} {car.brand} {car.model} {car.name}
-                </h1>
-                <div className="flex items-center gap-4 mt-3 text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <MapPin size={16} />
-                    <span className="text-sm font-medium">{car.location || "Location N/A"}</span>
+              <div className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div className="flex-1">
+                  {car.is_featured && (
+                    <span className="inline-block px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-md mb-3">
+                      Featured
+                    </span>
+                  )}
+                  <h1 className="text-4xl font-extrabold text-[#1A1A1A] leading-tight">
+                    {car.is_used ? 'Used' : 'New'} {car.year} {car.brand} {car.model} {car.name}
+                  </h1>
+                  <div className="flex items-center gap-4 mt-3 text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <MapPin size={16} />
+                      <span className="text-sm font-medium">{car.location || "Location N/A"}</span>
+                    </div>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                    {/* <div className="flex items-center gap-1 font-bold text-orange-600">
+                      <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm">{(car.rating || 4.8).toFixed(1)} ({(car.reviews_count || 120).toLocaleString()} reviews)</span>
+                    </div> */}
                   </div>
-                  <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                  <div className="flex items-center gap-1 font-bold text-orange-600">
-                    <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm">{(car.rating || 4.8).toFixed(1)} ({(car.reviews_count || 120).toLocaleString()} reviews)</span>
-                  </div>
+                </div>
+
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={handleShare}
+                    className="w-11 h-11 bg-gray-50 hover:bg-white border border-gray-200 text-gray-700 rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-105 active:scale-95"
+                    title="Share Car"
+                  >
+                    <Share2 size={20} />
+                  </button>
                 </div>
               </div>
 
@@ -466,65 +478,85 @@ export default function CarDetailPage() {
           {/* RIGHT COLUMN (Sidebar) */}
           <div className="lg:col-span-4 space-y-6">
 
-            {/* Pricing Card */}
+            {/* Pricing Card - Rental Version */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
               <div className="p-1 bg-gray-50 border-b flex">
-                <button
-                  onClick={() => setPaymentType('finance')}
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${paymentType === 'finance' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  Finance
-                </button>
                 <button
                   onClick={() => setPaymentType('cash')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${paymentType === 'cash' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  Cash
+                  Daily
+                </button>
+                <button
+                  onClick={() => setPaymentType('finance')}
+                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${paymentType === 'finance' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Hourly
                 </button>
               </div>
 
               <div className="p-8">
-                {car.price_status && (
+                {car.driver_included ? (
                   <div className="flex items-center gap-2 text-green-700 font-bold text-sm mb-4">
                     <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
                       <CheckCircle2 size={12} />
                     </div>
-                    {car.price_status}
+                    Professional Driver Included
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-orange-700 font-bold text-sm mb-4">
+                    <div className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center">
+                      <CircleDot size={12} />
+                    </div>
+                    Self-Drive Choice
                   </div>
                 )}
 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-gray-900 tracking-tight">
-                      ₹{paymentType === 'cash' ? price.toLocaleString() : (car.monthly_emi || monthlyPayment).toLocaleString()}
+                      ₹{displayPrice.toLocaleString()}
                     </span>
-                    {paymentType === 'finance' && <span className="text-gray-500 font-bold text-lg">/mo</span>}
+                    <span className="text-gray-500 font-bold text-lg">/{paymentType === 'cash' ? 'day' : 'hr'}</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-medium mt-1">₹{car.down_payment || 0} down payment for well-qualified buyers</p>
+                  {paymentType === 'cash' ? (
+                    <p className="text-xs text-gray-500 font-medium mt-1">Minimum {car.min_booking_days || 1} day booking required</p>
+                  ) : (
+                    <p className="text-xs text-gray-500 font-medium mt-1">Minimum {car.min_booking_hours || 4} hours booking required</p>
+                  )}
+                </div>
+
+                {/* Rental Details Breakdown */}
+                <div className="space-y-3 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gray-500">Security Deposit</span>
+                    <span className="text-gray-900">₹{securityDeposit.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gray-500">Extra KM Charge</span>
+                    <span className="text-gray-900 text-orange-600">₹{extraKmPrice}/km</span>
+                  </div>
+                  {!car.driver_included && driverCharge > 0 && (
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-500">Optional Driver</span>
+                      <span className="text-gray-900">₹{driverCharge}/day</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
-                  <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg font-black shadow-xl h-14 uppercase tracking-wider">
-                    Reserve Now
+                  <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-base font-bold shadow-xl h-14 uppercase tracking-wider">
+                    Book This Car
                   </Button>
                   <Button variant="outline" className="w-full border-orange-600 text-orange-600 py-6 text-sm font-bold h-12">
-                    Explore Financing
+                    Check Availability
                   </Button>
                 </div>
-
-                {car.booking_benefits?.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-4">
-                    {car.booking_benefits.map((benefit, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-gray-600 font-bold">
-                        <CheckCircle2 size={14} className="text-green-600" />
-                        {benefit}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-              <div className="bg-[#FAFBFB] p-4 text-center">
-                <button className="text-xs font-bold text-orange-600 hover:underline">Calculate My Monthly Payment</button>
+              <div className="bg-[#FAFBFB] p-4 text-center border-t border-gray-100">
+                <button className="text-xs font-bold text-orange-600 hover:underline flex items-center justify-center gap-1 mx-auto">
+                  <Info size={14} /> View Detailed Pricing Terms
+                </button>
               </div>
             </div>
 
@@ -639,7 +671,7 @@ export default function CarDetailPage() {
             <div className="p-4 flex items-center justify-between border-b border-gray-100">
               <div>
                 <h3 className="font-primary font-bold text-gray-900 leading-tight">
-                  {car?.is_used ? 'Used' : 'New'} {car?.year} {car?.brand} {car.name} — ₹{price.toLocaleString()}
+                  {car?.is_used ? 'Used' : 'New'} {car?.year} {car?.brand} {car.name} — ₹{dailyPrice.toLocaleString()}
                 </h3>
               </div>
               <button
@@ -671,8 +703,8 @@ export default function CarDetailPage() {
 
               <div className="flex items-center gap-4">
                 <div className="hidden sm:block text-right">
-                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Est. Payment</span>
-                  <span className="block text-sm font-black text-orange-600">₹{(car.monthly_emi || monthlyPayment).toLocaleString()}/mo*</span>
+                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting from</span>
+                  <span className="block text-sm font-black text-orange-600">₹{dailyPrice.toLocaleString()}/day</span>
                 </div>
                 <Button className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-black px-6 h-10 uppercase tracking-widest">
                   Request Info
