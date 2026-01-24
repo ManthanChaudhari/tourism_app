@@ -14,7 +14,8 @@ import {
   Menu, 
   X,
   LogOut,
-  Settings
+  Settings,
+  Calendar
 } from 'lucide-react'
 
 const sidebarItems = [
@@ -22,6 +23,11 @@ const sidebarItems = [
     name: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard
+  },
+  {
+    name: 'Bookings',
+    href: '/admin/bookings',
+    icon: Calendar
   },
   {
     name: 'Packages',
