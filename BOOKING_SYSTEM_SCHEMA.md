@@ -73,22 +73,22 @@ RETURNS TEXT AS $$
 DECLARE
   year_part TEXT;
   sequence_num INTEGER;
-  booking_code TEXT;
+  new_booking_code TEXT;  -- Renamed variable to avoid conflict with column name
 BEGIN
   year_part := EXTRACT(YEAR FROM NOW())::TEXT;
   
   -- Get next sequence number for the year
   SELECT COALESCE(MAX(
-    CAST(SUBSTRING(booking_code FROM 9) AS INTEGER)
+    CAST(SUBSTRING(b.booking_code FROM 9) AS INTEGER)  -- Use table alias to avoid ambiguity
   ), 0) + 1
   INTO sequence_num
-  FROM bookings 
-  WHERE booking_code LIKE 'BK-' || year_part || '-%';
+  FROM bookings b  -- Add table alias
+  WHERE b.booking_code LIKE 'BK-' || year_part || '-%';
   
   -- Format: BK-2026-000123
-  booking_code := 'BK-' || year_part || '-' || LPAD(sequence_num::TEXT, 6, '0');
+  new_booking_code := 'BK-' || year_part || '-' || LPAD(sequence_num::TEXT, 6, '0');
   
-  RETURN booking_code;
+  RETURN new_booking_code;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -1,0 +1,158 @@
+/* Print-specific styles for booking success page */
+@media print {
+  /* Hide elements that shouldn't be printed */
+  .no-print,
+  button,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Optimize layout for print */
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: black !important;
+    background: white !important;
+  }
+
+  /* Remove shadows and borders for print */
+  .shadow,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Optimize card layouts for print */
+  .card {
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    margin-bottom: 1rem;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure text is readable */
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700 {
+    color: #374151 !important;
+  }
+
+  .text-green-600,
+  .text-green-700,
+  .text-green-800 {
+    color: #059669 !important;
+  }
+
+  .text-blue-600,
+  .text-blue-700,
+  .text-blue-800 {
+    color: #2563eb !important;
+  }
+
+  .text-orange-600,
+  .text-orange-700,
+  .text-orange-800 {
+    color: #ea580c !important;
+  }
+
+  /* Optimize background colors for print */
+  .bg-green-50 {
+    background-color: #f0fdf4 !important;
+  }
+
+  .bg-blue-50 {
+    background-color: #eff6ff !important;
+  }
+
+  .bg-orange-50 {
+    background-color: #fff7ed !important;
+  }
+
+  .bg-gray-50 {
+    background-color: #f9fafb !important;
+  }
+
+  /* Ensure proper spacing */
+  .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  /* Grid adjustments for print */
+  .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .xl\\:col-span-2 {
+    grid-column: span 1;
+  }
+
+  /* Typography adjustments */
+  h1 {
+    font-size: 24pt;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+  }
+
+  h3 {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  h4 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Ensure booking code is prominent */
+  .booking-code {
+    font-size: 18pt;
+    font-weight: bold;
+    border: 2px solid #000;
+    padding: 0.5rem;
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  /* Badge styles for print */
+  .badge {
+    border: 1px solid #374151;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 10pt;
+    display: inline-block;
+  }
+}

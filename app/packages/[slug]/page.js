@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import BookingForm from "@/components/BookingForm"
 
 export default function PackageDetailsPage() {
   const params = useParams()
@@ -445,89 +446,8 @@ export default function PackageDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* Booking Card */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="text-sm text-gray-600 mb-1">Starting from</div>
-                  {packageData.originalPrice && packageData.originalPrice !== packageData.discountedPrice && (
-                    <div className="text-lg text-gray-500 line-through">
-                      ₹{packageData.originalPrice?.toLocaleString()}
-                    </div>
-                  )}
-                  <div className="text-3xl font-bold text-orange-600 mb-1">
-                    ₹{packageData.discountedPrice?.toLocaleString() || packageData.price?.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600">per person</div>
-                  {packageData.discount && (
-                    <div className="text-sm text-green-600 font-medium mt-2">
-                      🎉 Save {packageData.discount}%
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Travel Date</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="date"
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Number of Travelers</label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <select className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                        <option>1 Person</option>
-                        <option>2 People</option>
-                        <option>3 People</option>
-                        <option>4 People</option>
-                        <option>5+ People</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 text-lg font-semibold mb-4">
-                  Book Now
-                </Button>
-
-                <div className="space-y-2 text-center text-xs text-gray-500">
-                  <p>✓ Instant confirmation</p>
-                  <p>✓ Free cancellation up to 24 hours</p>
-                  <p>✓ Best price guarantee</p>
-                </div>
-
-                {/* Contact Options */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3">Need Help?</h4>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left"
-                      onClick={() => window.open('tel:+1234567890')}
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call Us
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left"
-                      onClick={() => window.open('mailto:support@example.com')}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email Support
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Booking Form */}
+            <BookingForm packageData={packageData} />
 
             {/* Quick Facts */}
             <Card>

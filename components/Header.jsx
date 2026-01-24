@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Home, Info, MapPin, LogOut, Car, Building2 } from "lucide-react";
+import { Home, Info, MapPin, LogOut, Car, Building2, Calendar } from "lucide-react";
 import { useUser, useSupabase } from "@/lib/supabase/hooks";
 import { authAPI } from "@/lib/auth";
 import { useSettings } from "@/lib/hooks/useSettings";
@@ -90,6 +90,18 @@ export default function Header() {
                 Cars
                 <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
               </a>
+            )}
+            
+            {/* My Bookings - Only show for authenticated users */}
+            {user && (
+              <Link 
+                href="/bookings" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 relative flex items-center gap-2 py-2 group"
+              >
+                <Calendar size={18} />
+                My Bookings
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
+              </Link>
             )}
           </nav>
 
@@ -220,6 +232,18 @@ export default function Header() {
                         <Car size={18} />
                         <span className="text-base">Cars</span>
                       </a>
+                    )}
+                    
+                    {/* My Bookings - Only show for authenticated users */}
+                    {user && (
+                      <Link 
+                        href="/bookings" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+                      >
+                        <Calendar size={18} />
+                        <span className="text-base">My Bookings</span>
+                      </Link>
                     )}
                   </div>
 
